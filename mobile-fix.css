@@ -1,6 +1,5 @@
-/* mobile sidebar — hard fix for touch / stacking */
+/* mobile sidebar — overlay must NOT cover the drawer */
 @media (max-width: 850px) {
-  /* Kill overlays that steal taps on iOS / WebView */
   .grain,
   body::before,
   body::after {
@@ -9,11 +8,12 @@
     z-index: -1 !important;
   }
 
-  /* Do not trap fixed UI inside a low stacking context */
   .app-shell {
     position: relative !important;
     z-index: auto !important;
     isolation: auto !important;
+    transform: none !important;
+    filter: none !important;
   }
 
   :root {
@@ -32,7 +32,6 @@
     pointer-events: auto !important;
   }
 
-  /* Hamburger: fixed to viewport, always tappable */
   #mobileMenuBtn,
   .mobile-menu {
     display: grid !important;
@@ -54,40 +53,54 @@
     cursor: pointer !important;
   }
 
-  .sidebar {
+  .sidebar,
+  aside.sidebar,
+  .sidebar.open,
+  aside.sidebar.open {
     position: fixed !important;
     left: 10px !important;
     top: 10px !important;
     bottom: 10px !important;
     width: min(300px, 88vw) !important;
-    z-index: 10040 !important;
+    z-index: 10050 !important;
     transform: translate3d(-120%, 0, 0) !important;
     visibility: visible !important;
     pointer-events: none !important;
     opacity: 1 !important;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-    will-change: transform;
   }
 
-  .sidebar.open {
+  .sidebar.open,
+  aside.sidebar.open {
     transform: translate3d(0, 0, 0) !important;
     pointer-events: auto !important;
     visibility: visible !important;
   }
 
+  .sidebar.open .nav,
   .sidebar.open .nav-item,
   .sidebar.open .sidebar-playlist,
+  .sidebar.open .sidebar-playlists,
   .sidebar.open .icon-button,
-  .sidebar.open button {
+  .sidebar.open .sidebar-bottom,
+  .sidebar.open button,
+  .sidebar.open a {
     pointer-events: auto !important;
+    position: relative !important;
+    z-index: 2 !important;
   }
 
+  /* Scrim only on the RIGHT — does not cover Search/Library/playlists */
   .overlay,
   #overlay {
     display: none;
     position: fixed !important;
-    inset: 0 !important;
-    z-index: 10030 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: min(310px, 90vw) !important;
+    width: auto !important;
+    z-index: 10040 !important;
     background: rgba(0, 0, 0, 0.55) !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
@@ -101,7 +114,6 @@
 
   body.sidebar-open {
     overflow: hidden !important;
-    touch-action: none;
   }
 
   .player {
