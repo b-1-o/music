@@ -670,7 +670,6 @@ function renderPlaylists() {
   let drag = null;
   let suppressClick = false;
   let suppressTimer = 0;
-  let mobileSwitchTimer = 0;
 
   const wrap = (value, total) => ((value + total / 2) % total + total) % total - total / 2;
   const modulo = (value, total) => ((value % total) + total) % total;
@@ -682,28 +681,11 @@ function renderPlaylists() {
     const width = host.clientWidth;
     const mobile = window.innerWidth <= 620;
     const step = width < 680 ? 255 : width < 1000 ? 300 : 330;
-    host.classList.toggle("mobile-single", mobile);
     const total = buttons.length;
-    phase += (target - phase) * 0.14;
+    phase += (target - phase) * (mobile ? 0.18 : 0.14);
     if (Math.abs(target - phase) < 0.0005) phase = target;
 
     buttons.forEach((button, index) => {
-      if (mobile) {
-        const activeIndex = modulo(Math.round(phase), total);
-        const active = index === activeIndex;
-        const dragOffset = active && drag?.moved ? Math.max(-width * 0.42, Math.min(width * 0.42, drag.offset || 0)) : 0;
-        button.style.transform = active
-          ? "translate3d(" + dragOffset + "px,0,0) scale(1)"
-          : "translate3d(0,0,0) scale(.96)";
-        button.style.opacity = active ? "1" : "0";
-        button.style.zIndex = active ? "20" : "0";
-        button.style.pointerEvents = active ? "auto" : "none";
-        button.style.filter = active ? "none" : "none";
-        button.classList.toggle("is-center", active);
-        button.tabIndex = active ? 0 : -1;
-        return;
-      }
-
       const slot = wrap(index - phase, total);
       const abs = Math.abs(slot);
       const x = slot * step + slot * abs * 13;
@@ -737,13 +719,6 @@ function renderPlaylists() {
   const moveBy = (direction) => {
     if (host.classList.contains("is-open")) return;
     target = Math.round(target) + direction;
-    if (window.innerWidth <= 620) {
-      host.classList.remove("is-mobile-switching");
-      void host.offsetWidth;
-      host.classList.add("is-mobile-switching");
-      window.clearTimeout(mobileSwitchTimer);
-      mobileSwitchTimer = window.setTimeout(() => host.classList.remove("is-mobile-switching"), 320);
-    }
     requestRender();
   };
 
@@ -767,7 +742,6 @@ function renderPlaylists() {
       if (suppressClick) {
         suppressClick = false;
         window.clearTimeout(suppressTimer);
-        window.clearTimeout(mobileSwitchTimer);
         return;
       }
 
@@ -793,7 +767,7 @@ function renderPlaylists() {
   const onPointerDown = (event) => {
     if (host.classList.contains("is-open")) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    drag = { pointerId: event.pointerId, startX: event.clientX, startTarget: Math.round(target), offset: 0, moved: false };
+    drag = { pointerId: event.pointerId, startX: event.clientX, startTarget: target, offset: 0, moved: false };
     event.preventDefault();
   };
 
@@ -804,9 +778,8 @@ function renderPlaylists() {
     if (drag.moved) {
       event.preventDefault();
       drag.offset = dx;
-      if (window.innerWidth > 620) {
-        target = drag.startTarget - dx / 245;
-      }
+      const dragSpeed = window.innerWidth <= 620 ? 205 : 245;
+      target = drag.startTarget - dx / dragSpeed;
       requestRender();
     }
   };
@@ -814,21 +787,7 @@ function renderPlaylists() {
   const onPointerUp = (event) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     if (drag.moved) {
-      const mobile = window.innerWidth <= 620;
-      if (mobile) {
-        const threshold = Math.max(54, Math.min(host.clientWidth * 0.18, 92));
-        const direction = Math.abs(drag.offset || 0) >= threshold ? (drag.offset < 0 ? 1 : -1) : 0;
-        target = drag.startTarget + direction;
-        if (direction) {
-          host.classList.remove("is-mobile-switching");
-          void host.offsetWidth;
-          host.classList.add("is-mobile-switching");
-          window.clearTimeout(mobileSwitchTimer);
-          mobileSwitchTimer = window.setTimeout(() => host.classList.remove("is-mobile-switching"), 320);
-        }
-      } else {
-        target = Math.round(target);
-      }
+      target = Math.round(target);
       requestRender();
       suppressClick = true;
       window.clearTimeout(suppressTimer);
