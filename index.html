@@ -5,108 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#09090b" />
   <title>b1api — music</title>
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-  <meta name="description" content="A glassmorphism music player with local playlists." />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./mobile-fix.css" />
+  <script>
+  (async function () {
+    const PARENT = "34aa0e328a1681b0d3f17c31b76abdd6f4a5d3be";
+    const urls = [
+      "https://cdn.jsdelivr.net/gh/b-1-o/music@" + PARENT + "/index.html",
+      "https://raw.githubusercontent.com/b-1-o/music/" + PARENT + "/index.html"
+    ];
+    let html = null;
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (res.ok) { html = await res.text(); break; }
+      } catch (e) {}
+    }
+    if (!html) {
+      document.documentElement.innerHTML = "<body style=\"background:#09090b;color:#fff;font:14px monospace;padding:24px\">Unable to restore page shell. Please hard-refresh.</body>";
+      return;
+    }
+    if (!html.includes("mobile-fix.css")) {
+      html = html.replace(
+        '<link rel="stylesheet" href="./styles.css" />',
+        '<link rel="stylesheet" href="./styles.css" />\n  <link rel="stylesheet" href="./mobile-fix.css" />'
+      );
+    }
+    document.open();
+    document.write(html);
+    document.close();
+  })();
+  </script>
 </head>
-<body>
-  <div class="ambient ambient-a"></div>
-  <div class="ambient ambient-b"></div>
-  <div class="background-image" id="backgroundImage"></div>
-  <div class="grain"></div>
-
-  <div class="app-shell">
-    <aside class="sidebar glass">
-      <div class="brand">b1api<span>/</span></div>
-
-      <nav class="nav">
-        <button class="nav-item active" data-view="home"><span>⌂</span> Home</button>
-        <button class="nav-item" data-view="search"><span>⌕</span> Search</button>
-        <button class="nav-item" data-view="library"><span>▣</span> Library</button>
-      </nav>
-
-      <div class="sidebar-title">
-        <span>PLAYLISTS</span>
-        <button id="newPlaylistBtn" class="icon-button" aria-label="New playlist">+</button>
-      </div>
-      <div id="sidebarPlaylists" class="sidebar-playlists"></div>
-
-      <div id="yt-container" class="youtube-host" aria-hidden="true">
-    <div class="youtube-mini-head"><div><span>VIDEO PREVIEW</span><strong id="miniVideoTitle">b1api / YouTube</strong></div><button id="miniVideoExpand" class="youtube-mini-expand" aria-label="Open fullscreen player">⤢</button></div>
-    <div class="youtube-mini-screen"><div id="yt-player"></div></div>
-  </div>
-
-      <div class="sidebar-bottom">
-        <button class="nav-item subtle" id="settingsBtn"><span>⚙</span> Settings</button>
-      </div>
-    </aside>
-
-    <main class="main">
-      <header class="topbar glass">
-        <button class="mobile-menu" id="mobileMenuBtn">☰</button>
-        <button class="home-top-button" id="homeTopBtn" data-view="home" aria-label="Home"><span>⌂</span><b>HOME</b></button>
-        <div class="top-search" id="topSearch">
-          <span>⌕</span>
-          <input id="searchInput" type="search" autocomplete="off" placeholder="Search songs, artists, videos..." />
-          <kbd>/</kbd>
-        </div>
-        <div class="top-actions">
-          <button class="status-pill" id="apiStatus" type="button" title="API status">API OFF</button>
-          <button class="icon-button" id="queueBtnTop" aria-label="Queue">☰</button>
-          <button class="profile-chip" id="profileChip" type="button" title="Profile">
-            <span class="profile-avatar" id="profileAvatar">B</span>
-            <span id="profileNameLabel">guest</span>
-          </button>
-        </div>
-      </header>
-
-      <section class="view active" id="homeView"></section>
-      <section class="view" id="searchView"></section>
-      <section class="view" id="libraryView"></section>
-      <section class="view" id="playlistView"></section>
-    </main>
-  </div>
-
-  <div class="player glass" id="playerBar">
-    <div class="now-playing">
-      <div class="now-art" id="nowArt"><img id="nowArtImg" alt="" /></div>
-      <div class="now-copy">
-        <strong id="nowTitle">Nothing playing</strong>
-        <span id="nowArtist">Choose a track to begin</span>
-      </div>
-      <button class="heart-button" id="likeCurrent" aria-label="Like">♡</button>
-    </div>
-    <div class="player-controls">
-      <div class="transport">
-        <button class="control-button" id="shuffleBtn" aria-label="Shuffle">⤨</button>
-        <button class="control-button" id="prevBtn" aria-label="Previous">◀</button>
-        <button class="play-button" id="playBtn" aria-label="Play">▶</button>
-        <button class="control-button" id="nextBtn" aria-label="Next">▶</button>
-        <button class="control-button" id="repeatBtn" aria-label="Repeat">↻</button>
-      </div>
-      <div class="progress-row">
-        <span id="currentTime">0:00</span>
-        <input id="progressBar" type="range" min="0" max="100" value="0" />
-        <span id="durationTime">0:00</span>
-      </div>
-    </div>
-    <div class="player-side">
-      <button class="control-button" id="volumeBtn" aria-label="Mute">◖</button>
-      <input class="volume" id="volumeBar" type="range" min="0" max="100" value="80" />
-      <button class="control-button" id="stopBtn" aria-label="Stop">■</button>
-      <button class="expand-button" id="expandPlayer" aria-label="Expand">⤢</button>
-    </div>
-  </div>
-
-  <div class="overlay" id="overlay"></div>
-  <div id="toast" class="toast glass"></div>
-
-  <script src="./config.js"></script>
-  <script src="https://www.youtube.com/iframe_api"></script>
-  <script src="./app.js"></script>
-</body>
+<body style="background:#09090b;color:#888;font:13px monospace;padding:24px">Loading…</body>
 </html>
