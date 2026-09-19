@@ -310,6 +310,7 @@ function applySettings() {
   const setValue = (id, value) => { const el = $("#" + id); if (el) el.value = value; };
   setValue("bgUrlInput", s.bgUrl || "");
   setValue("glassRange", s.glass ?? 16);
+  if ($("#glassValue")) $("#glassValue").textContent = `${s.glass ?? 16}px`;
   setValue("bgOpacityRange", 100);
   setValue("bgBlurRange", 0);
   setValue("primaryColor", s.primaryColor || "#e7e7e7");
