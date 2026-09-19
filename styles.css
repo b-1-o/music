@@ -1262,3 +1262,113 @@ body:has(#homeView.active){
     animation:none!important;
   }
 }
+
+
+/* === COMPACT MOBILE PLAYER === */
+@media(max-width:620px){
+  .player{
+    left:7px!important;
+    right:7px!important;
+    bottom:7px!important;
+    min-height:72px!important;
+    padding:6px 7px!important;
+    gap:4px!important;
+    border-radius:14px!important;
+  }
+  .now-playing{
+    gap:6px!important;
+    min-width:0!important;
+  }
+  .now-art{
+    width:36px!important;
+    height:36px!important;
+    border-radius:8px!important;
+  }
+  .now-copy strong{
+    max-width:145px!important;
+    font-size:9px!important;
+  }
+  .now-copy span{
+    max-width:145px!important;
+    margin-top:2px!important;
+    font-size:7px!important;
+  }
+  .heart-button{
+    width:26px!important;
+    height:26px!important;
+    font-size:13px!important;
+  }
+  .player-controls{
+    grid-column:1/-1!important;
+    min-width:0!important;
+  }
+  .transport{
+    gap:3px!important;
+    min-height:30px!important;
+  }
+  .control-button,
+  .expand-button{
+    width:27px!important;
+    height:27px!important;
+    border-radius:8px!important;
+    font-size:7px!important;
+  }
+  .play-button{
+    width:31px!important;
+    height:31px!important;
+    font-size:8px!important;
+  }
+  .progress-row{
+    grid-template-columns:24px 1fr 24px!important;
+    gap:4px!important;
+    margin-top:2px!important;
+  }
+  .progress-row span{
+    font-size:6px!important;
+  }
+  .player-side{
+    gap:3px!important;
+  }
+  .player-side .control-button{
+    width:27px!important;
+    height:27px!important;
+  }
+  .volume{
+    display:none!important;
+  }
+  .player-side .expand-button{
+    width:27px!important;
+    height:27px!important;
+  }
+}
+
+/* Extra-small phones */
+@media(max-width:390px){
+  .player{
+    min-height:68px!important;
+    padding:5px 6px!important;
+    left:5px!important;
+    right:5px!important;
+    bottom:5px!important;
+  }
+  .now-art{
+    width:32px!important;
+    height:32px!important;
+  }
+  .now-copy strong,.now-copy span{
+    max-width:120px!important;
+  }
+  .control-button,.expand-button{
+    width:25px!important;
+    height:25px!important;
+  }
+  .play-button{
+    width:29px!important;
+    height:29px!important;
+  }
+  .player-side .control-button,
+  .player-side .expand-button{
+    width:25px!important;
+    height:25px!important;
+  }
+}
