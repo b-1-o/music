@@ -58,58 +58,15 @@
       </header>
 
       <section id="homeView" class="view active">
-        <div class="hero">
-          <div class="hero-copy">
-            <div class="eyebrow">YOUR SPACE · NO ACCOUNT</div>
-            <h1>Listen.<br><em>remember.</em></h1>
-            <p>Search, collect and replay — with a local library that stays in this browser.</p>
-            <div class="hero-actions">
-              <button class="primary-button" id="startSearching">Start searching <span>↗</span></button>
-              <button class="ghost-button" id="scrollPlaylists">Browse playlists</button>
-            </div>
-          </div>
-        </div>
-
-        <section class="section">
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">02 / VISUAL INDEX</span>
-              <h2>Choose a <em>playlist.</em></h2>
-            </div>
-            <button class="text-button" id="seeAllPlaylists">See all <span>→</span></button>
+        <div class="home-minimal">
+          <div class="home-minimal-head">
+            <span class="eyebrow">PLAYLISTS</span>
+            <span class="home-minimal-meta">LOCAL LIBRARY</span>
           </div>
           <div class="carousel-frame">
-            <button class="carousel-arrow carousel-prev" id="carouselPrev" aria-label="Previous playlist">←</button>
             <div id="playlistCarousel" class="playlist-carousel"></div>
-            <button class="carousel-arrow carousel-next" id="carouselNext" aria-label="Next playlist">→</button>
           </div>
-        </section>
-
-        <section class="section">
-          <div class="section-heading">
-            <div>
-              <span class="eyebrow">DISCOVER</span>
-              <h2>Start with a search</h2>
-            </div>
-          </div>
-          <div class="discover-grid">
-            <button class="discover-card glass" data-search="Kai Angel">
-              <span class="discover-art art-one">KA</span>
-              <span><strong>Kai Angel</strong><small>Search the artist</small></span>
-              <span class="arrow">↗</span>
-            </button>
-            <button class="discover-card glass" data-search="fakemink">
-              <span class="discover-art art-two">FM</span>
-              <span><strong>fakemink</strong><small>Search the artist</small></span>
-              <span class="arrow">↗</span>
-            </button>
-            <button class="discover-card glass" data-search="new music 2026">
-              <span class="discover-art art-three">26</span>
-              <span><strong>New music</strong><small>Find recent uploads</small></span>
-              <span class="arrow">↗</span>
-            </button>
-          </div>
-        </section>
+        </div>
       </section>
 
       <section id="searchView" class="view">
@@ -255,19 +212,25 @@
   </div>
   <dialog id="settingsDialog" class="modal glass">
     <div class="modal-head">
-      <div>
-        <span class="eyebrow">SETTINGS</span>
-        <h3>Make it yours.</h3>
-      </div>
+      <div><span class="eyebrow">SETTINGS</span><h3>Appearance</h3></div>
       <button class="icon-button" data-close-dialog="settingsDialog">×</button>
     </div>
-
     <div class="setting-block">
       <label>Local nickname</label>
       <input id="profileNameInput" class="text-input" maxlength="24" autocomplete="nickname" placeholder="Your nickname" />
-      <small>This profile is local to this browser. It is not an account.</small>
+      <small>Stored only in this browser.</small>
     </div>
-
+    <div class="setting-block">
+      <label>Theme colors</label>
+      <div class="color-grid">
+        <label class="color-field"><span>Primary</span><input id="primaryColor" type="color" value="#e7e7e7" /></label>
+        <label class="color-field"><span>Secondary</span><input id="secondaryColor" type="color" value="#8f8f8f" /></label>
+        <label class="color-field"><span>Accent</span><input id="accentColor" type="color" value="#c8c8c8" /></label>
+        <label class="color-field"><span>Surface</span><input id="surfaceColor" type="color" value="#111111" /></label>
+        <label class="color-field"><span>Background</span><input id="backgroundColor" type="color" value="#070707" /></label>
+      </div>
+      <small>Grayscale is the default. Every color can be changed locally.</small>
+    </div>
     <div class="setting-block">
       <label>Background image</label>
       <div class="bg-file-row">
@@ -275,29 +238,31 @@
         <input id="bgFileInput" type="file" accept="image/*" hidden />
         <button class="ghost-button bg-clear-button" id="clearBgFile" type="button">Remove</button>
       </div>
-      <small id="bgFileName">No file selected</small>
+      <small id="bgFileName">No local image selected</small>
     </div>
     <div class="setting-block">
       <label>Background image URL</label>
       <input id="bgUrlInput" class="text-input" placeholder="https://..." />
-      <small>Use a URL only when you prefer a remote image.</small>
+      <small>Leave empty when using a local file.</small>
     </div>
-
+    <div class="setting-block">
+      <label>Image opacity <span id="bgOpacityValue">28%</span></label>
+      <input id="bgOpacityRange" type="range" min="0" max="60" value="28" />
+    </div>
+    <div class="setting-block">
+      <label>Image blur <span id="bgBlurValue">8px</span></label>
+      <input id="bgBlurRange" type="range" min="0" max="24" value="8" />
+    </div>
     <div class="setting-block">
       <label>Glass intensity</label>
-      <input id="glassRange" type="range" min="10" max="35" value="20" />
+      <input id="glassRange" type="range" min="0" max="35" value="16" />
     </div>
-
     <div class="setting-block">
       <label>Motion</label>
-      <div class="segmented">
-        <button data-motion="full" class="active">Full</button>
-        <button data-motion="reduced">Reduced</button>
-      </div>
+      <div class="segmented"><button data-motion="full" class="active">Full</button><button data-motion="reduced">Reduced</button></div>
     </div>
-
     <div class="modal-actions">
-      <button class="ghost-button" data-close-dialog="settingsDialog">Cancel</button>
+      <button class="ghost-button" id="resetAppearance" type="button">Reset appearance</button>
       <button class="primary-button" id="saveSettings">Save settings</button>
     </div>
   </dialog>
