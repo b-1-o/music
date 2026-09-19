@@ -32,31 +32,6 @@
     pointer-events: auto !important;
   }
 
-  /* Hamburger — same glass language as topbar */
-  #mobileMenuBtn,
-  .mobile-menu {
-    display: grid !important;
-    position: fixed !important;
-    left: 12px !important;
-    top: 18px !important;
-    width: 44px !important;
-    height: 44px !important;
-    place-items: center !important;
-    margin: 0 !important;
-    border: 1px solid var(--line, rgba(255, 255, 255, 0.1)) !important;
-    border-radius: 12px !important;
-    background: var(--panel, rgba(15, 17, 22, 0.72)) !important;
-    color: var(--text, #f0f0f2) !important;
-    box-shadow: inset 0 1px rgba(255, 255, 255, 0.06) !important;
-    backdrop-filter: blur(var(--glass-blur, 16px)) saturate(115%) !important;
-    -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(115%) !important;
-    z-index: 10060 !important;
-    pointer-events: auto !important;
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: transparent !important;
-    cursor: pointer !important;
-  }
-
   .sidebar,
   aside.sidebar,
   .sidebar.open,
@@ -85,14 +60,8 @@
   .sidebar.open .nav-item,
   .sidebar.open .sidebar-playlist,
   .sidebar.open .sidebar-playlists,
-  .sidebar.open .icon-button,
-  .sidebar.open .sidebar-bottom,
   .sidebar.open button,
-  .sidebar.open a {
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 2 !important;
-  }
+  .sidebar.open a { pointer-events:auto!important; position:relative!important; z-index:2!important; }
 
   /* Scrim only to the right of the drawer */
   .overlay,
@@ -131,11 +100,6 @@
     font-size: 16px !important;
     line-height: 1.2 !important;
     -webkit-text-size-adjust: 100% !important;
-  }
-
-  #backgroundBtn,
-  #apiBtn {
-    display: none !important;
   }
 
   /* Bottom tabs — glass like player / topbar */
@@ -218,8 +182,4 @@
     display: none !important;
   }
 
-  #mobileMenuBtn,
-  .mobile-menu {
-    display: none !important;
-  }
 }
