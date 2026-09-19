@@ -249,7 +249,7 @@ function renderPlaylists() {
     `;
   }).join("");
 
-  const buttons = $(".playlist-card", host);
+  const buttons = host.querySelectorAll(".playlist-card");
   buttons.forEach((btn, index) => btn.addEventListener("click", () => {
     if (host.__b1apiSuppressClick) return;
     const centered = Math.abs(index - getNearestCarouselIndex(host, buttons)) < 0.5;
