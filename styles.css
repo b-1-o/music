@@ -1153,3 +1153,29 @@ body:has(#homeView.active){
     font-size:32px!important;
   }
 }
+
+
+/* Keep Video Preview alive, but completely behind the sidebar edge. */
+.youtube-host{
+  left:0!important;
+  right:auto!important;
+  transform:translateX(calc(-100% - 16px))!important;
+  z-index:69!important;
+  pointer-events:none!important;
+}
+.youtube-host.ready{
+  transform:translateX(calc(-100% - 16px))!important;
+}
+@media(max-width:850px){
+  .youtube-host{
+    left:0!important;
+    transform:translateX(calc(-100% - 12px))!important;
+  }
+}
+@media(max-width:620px){
+  .youtube-host{
+    left:0!important;
+    bottom:164px!important;
+    transform:translateX(calc(-100% - 10px))!important;
+  }
+}
