@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>b1api Browser Controls</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;width:360px;background:#090a0c;color:#f3f4f6;font:13px/1.45 Inter,system-ui,sans-serif}
+button,select{font:inherit}
+.shell{padding:16px}
+.head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:14px}
+.eyebrow,.label{display:block;color:#7d838e;font-size:9px;font-weight:800;letter-spacing:.16em}
+h1{font-size:24px;line-height:1;letter-spacing:-.05em;margin:5px 0 0}
+.icon{width:34px;height:34px;border:1px solid #252a32;border-radius:10px;background:#111318;color:#ddd;cursor:pointer}
+.site{padding:13px;border:1px solid #252a32;background:linear-gradient(145deg,rgba(255,255,255,.05),rgba(255,255,255,.015));border-radius:15px;margin-bottom:10px}
+.site strong{display:block;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.site small{display:block;color:#747b85;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notice{padding:11px;border:1px solid #463821;background:#18140e;color:#c2af91;border-radius:12px;margin-bottom:10px;font-size:11px}
+.hidden{display:none}
+.controls{display:grid;gap:7px}
+.control{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 11px;border:1px solid #20242b;background:#101216;border-radius:12px}
+.copy{min-width:0}.copy b{display:block;font-size:12px}.copy span{display:block;color:#777e89;font-size:10px}
+select{appearance:none;background:#0b0d11;color:#e8eaed;border:1px solid #2a2e37;border-radius:9px;padding:6px 8px;font-size:11px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.actions button{border:1px solid #2a2e37;border-radius:11px;padding:9px;cursor:pointer}
+.secondary{background:#101216;color:#cbd0d8}.primary{background:#f1f1f2;color:#090a0b}
+footer{display:flex;justify-content:space-between;color:#5f6570;font-size:9px;margin-top:11px}
+</style>
+</head>
+<body>
+<main class="shell">
+<header class="head">
+<div><span class="eyebrow">B1API / BROWSER</span><h1>Site controls.</h1></div>
+<button id="settings" class="icon" title="Dashboard">⚙</button>
+</header>
+<section class="site"><span class="label">CURRENT SITE</span><strong id="name">Loading…</strong><small id="url"></small></section>
+<section id="unsupported" class="notice hidden">This browser page does not accept normal extension site controls.</section>
+<section id="controls" class="controls"></section>
+<div class="actions"><button id="reset" class="secondary">Reset site</button><button id="reload" class="primary">Reload</button></div>
+<footer><span>Per-site browser controls</span><span>Local</span></footer>
+</main>
+<script>
+const ITEMS = [
+  ["javascript","JavaScript","Run page JavaScript."],
+  ["popups","Popups","Allow or block pop-up windows."],
+  ["cookies","Cookies","Allow or block site cookies."],
+  ["notifications","Notifications","Notification permission behavior."],
+  ["camera","Camera","Camera access behavior."],
+  ["microphone","Microphone","Microphone access behavior."],
+  ["geolocation","Location","Location access behavior."],
+  ["images","Images","Show or block images."],
+  ["sound","Sound","Allow or block page audio."]
+];
+
+let tab = null;
+let rules = {};
+
+function patternFor(url){
+  try{
+    const u = new URL(url);
+    if(!/^https?:$/.test(u.protocol)) return null;
+    return u.origin + "/*";
+  }catch{return null;}
+}
+
+async function loadRules(){
+  const data = await chrome.storage.local.get("siteRules");
+  rules = data.siteRules || {};
+}
+
+function currentRule(type){
+  const p = patternFor(tab?.url || "");
+  return p && rules[p] && rules[p][type] ? rules[p][type] : "default";
+}
+
+function siteName(url){
+  try{return new URL(url).hostname.replace(/^www\./,"");}
+  catch{return "Unavailable";}
+}
+
+async function setRule(type,value){
+  await chrome.runtime.sendMessage({
+    type:"setSiteSetting",
+    settingType:type,
+    value:value,
+    url:tab.url
+  });
+  await loadRules();
+}
+
+async function render(){
+  const unsupported = !patternFor(tab?.url || "");
+  document.getElementById("unsupported").classList.toggle("hidden",!unsupported);
+  const host = document.getElementById("controls");
+  host.innerHTML = "";
+  if(unsupported) return;
+
+  for(const item of ITEMS){
+    const row = document.createElement("label");
+    row.className = "control";
+
+    const copy = document.createElement("div");
+    copy.className = "copy";
+    const b = document.createElement("b");
+    b.textContent = item[1];
+    const s = document.createElement("span");
+    s.textContent = item[2];
+    copy.append(b,s);
+
+    const select = document.createElement("select");
+    [["default","Default"],["allow","Allow"],["block","Block"]].forEach(pair=>{
+      const option = document.createElement("option");
+      option.value = pair[0];
+      option.textContent = pair[1];
+      select.appendChild(option);
+    });
+    select.value = currentRule(item[0]);
+    select.addEventListener("change",async()=>{
+      select.disabled=true;
+      await setRule(item[0],select.value);
+      select.disabled=false;
+    });
+
+    row.append(copy,select);
+    host.appendChild(row);
+  }
+}
+
+(async()=>{
+  const tabs = await chrome.tabs.query({active:true,currentWindow:true});
+  tab = tabs[0] || null;
+  document.getElementById("name").textContent = tab?.url ? siteName(tab.url) : "Unavailable";
+  document.getElementById("url").textContent = tab?.url || "No active page";
+
+  document.getElementById("settings").addEventListener("click",()=>chrome.runtime.openOptionsPage());
+  document.getElementById("reload").addEventListener("click",()=>tab?.id && chrome.tabs.reload(tab.id));
+  document.getElementById("reset").addEventListener("click",async()=>{
+    if(!tab?.url) return;
+    await chrome.runtime.sendMessage({type:"removePattern",pattern:patternFor(tab.url)});
+    await loadRules();
+    await render();
+  });
+
+  await loadRules();
+  await render();
+})();
+</script>
+</body>
+</html>
