@@ -247,3 +247,77 @@ button:focus-visible,input:focus-visible{outline-color:var(--theme-accent)}
   .playlist-carousel .playlist-card{width:236px;height:344px;margin:-172px 0 0 -118px}
   .toast{right:12px;bottom:176px;min-width:0;width:calc(100vw - 24px)}
 }
+
+/* Sidebar YouTube preview, open playlist layout, unclipped carousel, background-color switch */
+.sidebar-playlists{flex:1;min-height:80px}
+.sidebar .youtube-host{
+  position:relative;inset:auto;right:auto;bottom:auto;z-index:71;
+  width:100%;height:auto;aspect-ratio:16/9;flex:none;
+  margin:2px 0 5px;padding:5px;border-radius:15px;
+  display:none;overflow:hidden;
+  background:linear-gradient(145deg,rgba(255,255,255,.07),rgba(5,6,9,.94));
+  border:1px solid var(--line);
+  box-shadow:0 18px 42px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.06);
+}
+.sidebar .youtube-host.ready{display:block}
+.sidebar .youtube-mini-head{left:5px;right:5px;top:5px;height:35px;padding:5px 7px 5px 9px;border-radius:10px 10px 0 0}
+.sidebar .youtube-mini-screen{border-radius:10px}
+.sidebar .youtube-mini-head span{font-size:6px}
+.sidebar .youtube-mini-head strong{font-size:7px}
+.sidebar .youtube-mini-expand{width:25px;height:25px;border-radius:8px;font-size:10px}
+
+.home-minimal{padding-bottom:90px}
+.home-minimal .carousel-frame{overflow:visible}
+.home-minimal .playlist-carousel{
+  border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;
+  overflow:visible;min-height:610px;height:610px;
+}
+.home-minimal .playlist-carousel::before{
+  content:"";position:absolute;left:50%;top:50%;width:min(64vw,720px);height:430px;transform:translate(-50%,-50%);
+  background:radial-gradient(ellipse,rgba(255,255,255,.04),transparent 68%);pointer-events:none;z-index:0;
+}
+.main{overflow:visible}
+body{overflow-x:clip}
+
+.playlist-open{inset:14px 3.5vw;grid-template-columns:minmax(300px,.78fr) minmax(440px,1.22fr)}
+.playlist-open-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.playlist-open-settings{width:42px;height:42px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035);color:var(--theme-secondary);transition:.2s}
+.playlist-open-settings:hover{color:var(--theme-primary);background:rgba(255,255,255,.07)}
+.playlist-open-list{display:grid;gap:6px;margin-top:18px}
+.playlist-open-track{display:grid;grid-template-columns:28px 46px minmax(0,1fr) 28px;gap:9px;align-items:center;width:100%;padding:6px;border:1px solid rgba(255,255,255,.075);border-radius:11px;background:rgba(255,255,255,.022);text-align:left}
+.playlist-open-track:hover{background:rgba(255,255,255,.05);border-color:var(--line)}
+.playlist-open-index{font:500 7px "DM Mono";color:var(--theme-secondary);text-align:center}
+.playlist-open-track img{width:46px;height:46px;border-radius:9px;object-fit:cover}
+.playlist-open-track-copy{min-width:0}
+.playlist-open-track-copy strong,.playlist-open-track-copy small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.playlist-open-track-copy strong{font-size:10px}
+.playlist-open-track-copy small{margin-top:3px;color:var(--theme-secondary);font-size:8px}
+.playlist-open-play{color:var(--theme-secondary);font:500 8px "DM Mono";text-align:center}
+.playlist-settings-modal{max-width:470px}
+
+.switch-field{display:grid!important;grid-template-columns:20px 30px 1fr;align-items:center;gap:9px;padding:10px 0;margin:0!important;cursor:pointer}
+.switch-field input{position:absolute;opacity:0;pointer-events:none}
+.switch-ui{position:relative;width:30px;height:18px;border:1px solid var(--line-strong);border-radius:99px;background:rgba(255,255,255,.05);transition:.2s}
+.switch-ui::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--theme-secondary);transition:.2s}
+.switch-field input:checked + .switch-ui{background:var(--theme-accent);border-color:var(--theme-accent)}
+.switch-field input:checked + .switch-ui::after{left:14px;background:var(--theme-background)}
+.setting-inline>small{display:block;margin-left:59px}
+
+body.no-bg-color{background:transparent}
+body.no-bg-color::before,body.no-bg-color::after{opacity:0}
+body.no-bg-color .background-image::after{
+  background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.08) 55%,rgba(0,0,0,.18));
+}
+
+@media(max-width:850px){
+  .sidebar .youtube-host{width:100%}
+  .home-minimal .playlist-carousel{height:560px;min-height:560px}
+  .playlist-open{inset:10px 2vw;grid-template-columns:1fr 1fr}
+}
+@media(max-width:620px){
+  .sidebar .youtube-host{aspect-ratio:16/9}
+  .home-minimal .playlist-carousel{height:500px;min-height:500px}
+  .playlist-open{inset:7px 7px;grid-template-columns:1fr;grid-template-rows:minmax(150px,34%) minmax(0,66%);gap:8px}
+  .playlist-open-track{grid-template-columns:25px 40px minmax(0,1fr) 24px}
+  .playlist-open-track img{width:40px;height:40px}
+}
