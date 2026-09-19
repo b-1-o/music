@@ -51,6 +51,8 @@ let progressTimer = 0;
 let backgroundObjectUrl = null;
 let selectedBackgroundFile = null;
 const BG_DB_NAME = "b1api_assets";
+const PLAYLIST_COVER_PREFIX = "playlist-cover:";
+const playlistCoverObjectUrls = new Map();
 const BG_STORE = "files";
 
 function loadJSON(key, fallback) {
@@ -89,12 +91,15 @@ function init() {
   renderSidebar();
   renderPlaylists();
   renderLibrary("liked");
+  loadPlaylistCovers();
   bindEvents();
   updateCounts();
   updatePlayerUI();
   renderLocalProfile();
   showView("home");
-  loadSavedBackground();
+  loadSavedBackground().then(() => {
+    applySettings();
+  });
   // YouTube iframe is created lazily on first playback.
   setupYouTube();
 }
@@ -115,6 +120,12 @@ function bindEvents() {
   $("#backgroundBtn").addEventListener("click", () => $("#settingsDialog").showModal());
   $("#newPlaylistBtn").addEventListener("click", () => $("#playlistDialog").showModal());
   $("#createPlaylist").addEventListener("click", createPlaylist);
+  $("#playlistCoverFile")?.addEventListener("change", e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const label = $("#playlistCoverFileName");
+    if (label) label.textContent = file.name;
+  });
   $("#saveSettings").addEventListener("click", saveSettings);
   $("#resetAppearance")?.addEventListener("click", resetAppearance);
   ["primaryColor","secondaryColor","accentColor","surfaceColor","backgroundColor"].forEach(id => {
@@ -348,6 +359,16 @@ async function clearStoredBackground() {
   });
 }
 
+async function deleteAsset(key) {
+  const db = await openAssetDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BG_STORE, "readwrite");
+    tx.objectStore(BG_STORE).delete(key);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+}
+
 async function handleBackgroundFile(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -439,73 +460,193 @@ function renderSidebar() {
 
 function renderPlaylists() {
   const host = $("#playlistCarousel");
+  if (!host) return;
   host.__b1apiCleanup?.();
+
   if (!state.playlists.length) {
-    host.className = "playlist-carousel";
-    host.innerHTML = '<div class="empty-state glass"><h3>No playlists yet.</h3><p>Create one from the + button in the sidebar.</p></div>';
+    host.className = "playlist-carousel immersive-stage";
+    host.innerHTML = '<div class="empty-state glass"><h3>No playlists yet.</h3><p>Create one from the + button.</p></div>';
     return;
   }
+
   host.className = "playlist-carousel immersive-stage";
-  host.innerHTML = '<div class="playlist-stage-track">' + state.playlists.map(function(pl,index){
-    return '<button class="playlist-card" data-playlist="'+pl.id+'" data-index="'+index+'" type="button" aria-label="Open '+escapeAttr(pl.name)+'">'
-NaN
-NaN
-NaN
-NaN
-NaN
-  }).join('') + '</div>'
-    + '<button class="carousel-arrow carousel-prev" id="carouselPrevInner" aria-label="Previous playlist">←</button>'
-    + '<button class="carousel-arrow carousel-next" id="carouselNextInner" aria-label="Next playlist">→</button>';
-  const buttons = $$('.playlist-card',host);
-  let phase=0,target=0,frame=0,active=0,drag=null,suppressClick=false,suppressTimer=0;
-  const wrap=function(value,total){return ((value+total/2)%total+total)%total-total/2;};
-  const modulo=function(value,total){return ((value%total)+total)%total;};
-  const requestRender=function(){if(!frame) frame=requestAnimationFrame(render);};
-  const render=function(){
-    const width=host.clientWidth;
-    const step=width<680?255:width<1000?300:330;
-    const total=buttons.length;
-    phase += (target-phase)*0.14;
-    if(Math.abs(target-phase)<0.0005) phase=target;
-    active=modulo(Math.round(phase),total);
-    buttons.forEach(function(button,index){
-      const slot=wrap(index-phase,total), abs=Math.abs(slot);
-      const x=slot*step+slot*abs*13, y=abs*abs*8;
-      const scale=abs<0.5?1.06:Math.max(0.72,1-abs*0.078);
-      const rotate=slot*-3.2, rotateY=slot*-9;
-      const opacity=Math.max(0.08,1-Math.max(0,abs-2.1)*0.48);
-      button.style.transform='translate3d(calc(-50% + '+x+'px),calc(-50% + '+y+'px),0) rotateZ('+rotate+'deg) rotateY('+rotateY+'deg) scale('+scale+')';
-      button.style.opacity=String(opacity);
-      button.style.zIndex=String(100-Math.round(abs*12));
-      button.classList.toggle('is-center',abs<0.5);
-      button.tabIndex=abs<0.5?0:-1;
-    });
-    if(Math.abs(target-phase)>0.0005 && !host.classList.contains('is-open')) frame=requestAnimationFrame(render); else frame=0;
+  host.innerHTML =
+    '<div class="playlist-stage-track">' +
+    state.playlists.map((pl, index) => `
+      <button class="playlist-card" data-playlist="${pl.id}" data-index="${index}" type="button" aria-label="Open ${escapeAttr(pl.name)}">
+        <div class="playlist-art">${playlistArtwork(pl)}</div>
+        <div class="playlist-card-sheen" aria-hidden="true"></div>
+        <span class="playlist-card-number">${String(index + 1).padStart(2, "0")}</span>
+        <div class="playlist-meta">
+          <small>PLAYLIST</small>
+          <strong>${escapeHTML(pl.name)}</strong>
+          <span>${pl.tracks.length} ${pl.tracks.length === 1 ? "TRACK" : "TRACKS"}</span>
+        </div>
+      </button>
+    `).join("") +
+    '</div>' +
+    '<button class="carousel-arrow carousel-prev" id="carouselPrevInner" aria-label="Previous playlist">←</button>' +
+    '<button class="carousel-arrow carousel-next" id="carouselNextInner" aria-label="Next playlist">→</button>';
+
+  const buttons = $$(".playlist-card", host);
+  let phase = 0;
+  let target = 0;
+  let frame = 0;
+  let drag = null;
+  let suppressClick = false;
+  let suppressTimer = 0;
+
+  const wrap = (value, total) => ((value + total / 2) % total + total) % total - total / 2;
+  const modulo = (value, total) => ((value % total) + total) % total;
+  const requestRender = () => {
+    if (!frame) frame = requestAnimationFrame(render);
   };
-  const nearestVirtualIndex=function(index){const total=buttons.length;const cycle=Math.round((target-index)/total);return index+cycle*total;};
-  const moveBy=function(direction){if(host.classList.contains('is-open'))return;target=Math.round(target)+direction;requestRender();};
-  const closePreview=function(){host.classList.remove('is-open');$('.playlist-open',host)?.remove();requestRender();};
-  const openPreview=function(index){const pl=state.playlists[index];if(!pl)return;host.classList.add('is-open');renderPlaylistPreview(host,pl,closePreview);if(frame)cancelAnimationFrame(frame);frame=0;};
-  buttons.forEach(function(button,index){button.addEventListener('click',function(){
-    if(suppressClick){suppressClick=false;window.clearTimeout(suppressTimer);return;}
-    const slot=wrap(index-phase,buttons.length);
-    if(Math.abs(slot)>=0.5){target=nearestVirtualIndex(index);requestRender();return;}
-    openPreview(index);
-  });});
-  const onWheel=function(event){if(host.classList.contains('is-open'))return;const delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;if(!delta)return;event.preventDefault();event.stopPropagation();target=Math.round(target)+(delta>0?1:-1);requestRender();};
-  const onPointerDown=function(event){if(host.classList.contains('is-open'))return;if(event.pointerType==='mouse'&&event.button!==0)return;drag={pointerId:event.pointerId,startX:event.clientX,startTarget:target,moved:false};event.preventDefault();};
-  const onPointerMove=function(event){if(!drag||event.pointerId!==drag.pointerId||host.classList.contains('is-open'))return;const dx=event.clientX-drag.startX;if(Math.abs(dx)>8)drag.moved=true;if(drag.moved){event.preventDefault();target=drag.startTarget-dx/245;requestRender();}};
-  const onPointerUp=function(event){if(!drag||event.pointerId!==drag.pointerId)return;if(drag.moved){target=Math.round(target);requestRender();suppressClick=true;window.clearTimeout(suppressTimer);suppressTimer=window.setTimeout(function(){suppressClick=false;},260);}drag=null;};
-  const onKey=function(event){if(host.classList.contains('is-open')){if(event.key==='Escape')closePreview();return;}if(event.key==='ArrowRight'){event.preventDefault();moveBy(1);}if(event.key==='ArrowLeft'){event.preventDefault();moveBy(-1);}};
-  $('#carouselPrevInner',host)?.addEventListener('click',function(){moveBy(-1);});
-  $('#carouselNextInner',host)?.addEventListener('click',function(){moveBy(1);});
-  window.addEventListener('pointermove',onPointerMove,{passive:false});
-  window.addEventListener('pointerup',onPointerUp,{passive:false});
-  window.addEventListener('pointercancel',onPointerUp,{passive:false});
-  window.addEventListener('keydown',onKey);
-  host.addEventListener('wheel',onWheel,{passive:false});
-  host.addEventListener('pointerdown',onPointerDown,{passive:false});
-  host.__b1apiCleanup=function(){if(frame)cancelAnimationFrame(frame);window.clearTimeout(suppressTimer);window.removeEventListener('pointermove',onPointerMove);window.removeEventListener('pointerup',onPointerUp);window.removeEventListener('pointercancel',onPointerUp);window.removeEventListener('keydown',onKey);host.removeEventListener('wheel',onWheel);host.removeEventListener('pointerdown',onPointerDown);};
+
+  function render() {
+    const width = host.clientWidth;
+    const step = width < 680 ? 250 : width < 1000 ? 300 : 330;
+    const total = buttons.length;
+
+    phase += (target - phase) * 0.14;
+    if (Math.abs(target - phase) < 0.0005) phase = target;
+
+    buttons.forEach((button, index) => {
+      const slot = wrap(index - phase, total);
+      const abs = Math.abs(slot);
+      const x = slot * step + slot * abs * 13;
+      const y = abs * abs * 8;
+      const scale = abs < 0.5 ? 1.06 : Math.max(0.72, 1 - abs * 0.078);
+      const rotate = slot * -3.2;
+      const rotateY = slot * -9;
+      const opacity = Math.max(0.08, 1 - Math.max(0, abs - 2.1) * 0.48);
+
+      button.style.transform = `translate3d(calc(-50% + ${x}px),calc(-50% + ${y}px),0) rotateZ(${rotate}deg) rotateY(${rotateY}deg) scale(${scale})`;
+      button.style.opacity = String(opacity);
+      button.style.zIndex = String(100 - Math.round(abs * 12));
+      button.classList.toggle("is-center", abs < 0.5);
+      button.tabIndex = abs < 0.5 ? 0 : -1;
+    });
+
+    if (Math.abs(target - phase) > 0.0005 && !host.classList.contains("is-open")) {
+      frame = requestAnimationFrame(render);
+    } else {
+      frame = 0;
+    }
+  }
+
+  const nearestVirtualIndex = (index) => {
+    const total = buttons.length;
+    const cycle = Math.round((target - index) / total);
+    return index + cycle * total;
+  };
+
+  const moveBy = (direction) => {
+    if (host.classList.contains("is-open")) return;
+    target = Math.round(target) + direction;
+    requestRender();
+  };
+
+  const closePreview = () => {
+    host.classList.remove("is-open");
+    $(".playlist-open", host)?.remove();
+    requestRender();
+  };
+
+  const openPreview = (index) => {
+    const pl = state.playlists[index];
+    if (!pl) return;
+    host.classList.add("is-open");
+    renderPlaylistPreview(host, pl, closePreview);
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+  };
+
+  buttons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      if (suppressClick) {
+        suppressClick = false;
+        window.clearTimeout(suppressTimer);
+        return;
+      }
+
+      const slot = wrap(index - phase, buttons.length);
+      if (Math.abs(slot) >= 0.5) {
+        target = nearestVirtualIndex(index);
+        requestRender();
+        return;
+      }
+      openPreview(index);
+    });
+  });
+
+  const onWheel = (event) => {
+    if (host.classList.contains("is-open")) return;
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    if (!delta) return;
+    event.preventDefault();
+    target = Math.round(target) + (delta > 0 ? 1 : -1);
+    requestRender();
+  };
+
+  const onPointerDown = (event) => {
+    if (host.classList.contains("is-open")) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    drag = { pointerId: event.pointerId, startX: event.clientX, startTarget: target, moved: false };
+    event.preventDefault();
+  };
+
+  const onPointerMove = (event) => {
+    if (!drag || drag.pointerId !== event.pointerId || host.classList.contains("is-open")) return;
+    const dx = event.clientX - drag.startX;
+    if (Math.abs(dx) > 8) drag.moved = true;
+    if (drag.moved) {
+      event.preventDefault();
+      target = drag.startTarget - dx / 245;
+      requestRender();
+    }
+  };
+
+  const onPointerUp = (event) => {
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (drag.moved) {
+      target = Math.round(target);
+      requestRender();
+      suppressClick = true;
+      window.clearTimeout(suppressTimer);
+      suppressTimer = window.setTimeout(() => { suppressClick = false; }, 260);
+    }
+    drag = null;
+  };
+
+  const onKey = (event) => {
+    if (host.classList.contains("is-open")) {
+      if (event.key === "Escape") closePreview();
+      return;
+    }
+    if (event.key === "ArrowRight") { event.preventDefault(); moveBy(1); }
+    if (event.key === "ArrowLeft") { event.preventDefault(); moveBy(-1); }
+  };
+
+  $("#carouselPrevInner", host)?.addEventListener("click", () => moveBy(-1));
+  $("#carouselNextInner", host)?.addEventListener("click", () => moveBy(1));
+  window.addEventListener("pointermove", onPointerMove, { passive: false });
+  window.addEventListener("pointerup", onPointerUp, { passive: false });
+  window.addEventListener("pointercancel", onPointerUp, { passive: false });
+  window.addEventListener("keydown", onKey);
+  host.addEventListener("wheel", onWheel, { passive: false });
+  host.addEventListener("pointerdown", onPointerDown, { passive: false });
+
+  host.__b1apiCleanup = () => {
+    if (frame) cancelAnimationFrame(frame);
+    window.clearTimeout(suppressTimer);
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
+    window.removeEventListener("keydown", onKey);
+    host.removeEventListener("wheel", onWheel);
+    host.removeEventListener("pointerdown", onPointerDown);
+  };
+
   requestRender();
 }
 
@@ -536,33 +677,87 @@ NaN
     if(event.target.closest('[data-preview-library]')){openPlaylist(pl.id);return;}
   });
 }
+async function loadPlaylistCovers() {
+  for (const pl of state.playlists) {
+    try {
+      const blob = await getAsset(PLAYLIST_COVER_PREFIX + pl.id);
+      if (!blob) continue;
+      const old = playlistCoverObjectUrls.get(pl.id);
+      if (old) URL.revokeObjectURL(old);
+      playlistCoverObjectUrls.set(pl.id, URL.createObjectURL(blob));
+    } catch {}
+  }
+  renderSidebar();
+  renderPlaylists();
+  const openPlaylistId = $("#playlistView")?.dataset.playlistId;
+  if (openPlaylistId) {
+    const pl = state.playlists.find(x => x.id === openPlaylistId);
+    if (pl) renderPlaylistPage(pl);
+  }
+}
+
+async function setPlaylistCover(id, file) {
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return toast("Choose an image file.");
+  if (file.size > 8 * 1024 * 1024) return toast("Image must be 8 MB or smaller.");
+  try {
+    await putAsset(PLAYLIST_COVER_PREFIX + id, file);
+    const old = playlistCoverObjectUrls.get(id);
+    if (old) URL.revokeObjectURL(old);
+    playlistCoverObjectUrls.set(id, URL.createObjectURL(file));
+    renderSidebar();
+    renderPlaylists();
+    const pl = state.playlists.find(x => x.id === id);
+    if (pl) renderPlaylistPage(pl);
+    toast("Playlist cover updated.");
+  } catch {
+    toast("Couldn't save that cover.");
+  }
+}
+
+async function clearPlaylistCover(id) {
+  try { await deleteAsset(PLAYLIST_COVER_PREFIX + id); } catch {}
+  const old = playlistCoverObjectUrls.get(id);
+  if (old) URL.revokeObjectURL(old);
+  playlistCoverObjectUrls.delete(id);
+  renderSidebar();
+  renderPlaylists();
+  const pl = state.playlists.find(x => x.id === id);
+  if (pl) renderPlaylistPage(pl);
+  toast("Playlist cover removed.");
+}
+
 function playlistArtwork(pl) {
+  const custom = playlistCoverObjectUrls.get(pl.id);
+  if (custom) return `<img src="${safeUrl(custom)}" alt="">`;
   const first = pl.tracks[0];
   if (first?.thumbnail) return `<img src="${safeUrl(first.thumbnail)}" alt="">`;
-  const gradients = [
-    "linear-gradient(135deg,#7666ff,#131018)",
-    "linear-gradient(135deg,#ff708e,#171013)",
-    "linear-gradient(135deg,#55dfdf,#101618)",
-    "linear-gradient(135deg,#d8b06f,#17140e)"
-  ];
-  return `<div style="width:100%;height:100%;background:${gradients[state.playlists.indexOf(pl)%gradients.length]};display:grid;place-items:center;font:800 46px 'Plus Jakarta Sans'">${escapeHTML((pl.name[0] || "F").toUpperCase())}</div>`;
+  return `<div class="playlist-fallback-art"><span>${escapeHTML((pl.name[0] || "F").toUpperCase())}</span></div>`;
 }
 
 function smallPlaylistArt(pl) {
+  const custom = playlistCoverObjectUrls.get(pl.id);
+  if (custom) return `<img src="${safeUrl(custom)}" alt="">`;
   const first = pl.tracks[0];
   if (first?.thumbnail) return `<img src="${safeUrl(first.thumbnail)}" alt="">`;
   return `<span class="fallback-art">${escapeHTML((pl.name[0] || "F").toUpperCase())}</span>`;
 }
 
-function createPlaylist() {
-  const name = $("#playlistNameInput").value.trim();
+async function createPlaylist() {
+  const name = $("#playlistNameInput")?.value.trim();
   if (!name) return toast("Give the playlist a name.");
-  state.playlists.unshift({ id: crypto.randomUUID(), name, tracks: [] });
+  const file = $("#playlistCoverFile")?.files?.[0] || null;
+  const playlist = { id: crypto.randomUUID(), name, tracks: [] };
+  state.playlists.unshift(playlist);
   saveState();
   renderSidebar();
   renderPlaylists();
+  renderLibrary("liked");
   $("#playlistNameInput").value = "";
+  if ($("#playlistCoverFile")) $("#playlistCoverFile").value = "";
+  if ($("#playlistCoverFileName")) $("#playlistCoverFileName").textContent = "Default: first track cover";
   $("#playlistDialog").close();
+  if (file) await setPlaylistCover(playlist.id, file);
   toast(`Created “${name}”.`);
 }
 
@@ -911,9 +1106,19 @@ function openPlaylist(id) {
 
 function renderPlaylistPage(pl) {
   const art = playlistArtwork(pl);
+  const hasCustomCover = playlistCoverObjectUrls.has(pl.id);
+  $("#playlistView").dataset.playlistId = pl.id;
+
   $("#playlistHero").innerHTML = `
     <div class="playlist-page-hero">
-      <div class="playlist-page-art">${art}</div>
+      <div class="playlist-page-art-wrap">
+        <div class="playlist-page-art">${art}</div>
+        <div class="playlist-cover-actions">
+          <label class="file-button playlist-edit-cover" for="playlistEditCoverFile"> ${hasCustomCover ? "Change cover" : "Add cover"} </label>
+          <input id="playlistEditCoverFile" type="file" accept="image/*" hidden />
+          ${hasCustomCover ? '<button type="button" class="ghost-button playlist-remove-cover">Remove cover</button>' : ''}
+        </div>
+      </div>
       <div class="playlist-page-copy">
         <span class="eyebrow">PLAYLIST</span>
         <h2>${escapeHTML(pl.name)}</h2>
@@ -925,6 +1130,12 @@ function renderPlaylistPage(pl) {
       </div>
     </div>
   `;
+
+  $("#playlistEditCoverFile")?.addEventListener("change", async event => {
+    const file = event.target.files?.[0];
+    if (file) await setPlaylistCover(pl.id, file);
+  });
+  $(".playlist-remove-cover")?.addEventListener("click", () => clearPlaylistCover(pl.id));
 
   const host = $("#playlistTracks");
   if (!pl.tracks.length) {
@@ -947,8 +1158,9 @@ function renderPlaylistPage(pl) {
       `).join("")}</div>`;
     const map = new Map(pl.tracks.map(x => [x.id, x]));
     $$("[data-play-track]", host).forEach(btn => btn.addEventListener("click", () => {
-      setQueue(pl.tracks, pl.tracks.findIndex(x => x.id === btn.dataset.playTrack));
-      playTrack(map.get(btn.dataset.playTrack));
+      const track = map.get(btn.dataset.playTrack);
+      setQueue(pl.tracks, pl.tracks.findIndex(x => x.id === track.id));
+      playTrack(track);
     }));
     $$("[data-remove-track]", host).forEach(btn => btn.addEventListener("click", () => {
       pl.tracks = pl.tracks.filter(x => x.id !== btn.dataset.removeTrack);
@@ -960,13 +1172,14 @@ function renderPlaylistPage(pl) {
     }));
   }
 
-  $("#playPlaylist").addEventListener("click", () => {
+  $("#playPlaylist")?.addEventListener("click", () => {
     if (!pl.tracks.length) return toast("This playlist is empty.");
     setQueue(pl.tracks, 0);
     playTrack(pl.tracks[0]);
   });
-  $("#deletePlaylist").addEventListener("click", () => {
+  $("#deletePlaylist")?.addEventListener("click", async () => {
     if (state.playlists.length <= 1) return toast("Keep at least one playlist.");
+    await clearPlaylistCover(pl.id);
     state.playlists = state.playlists.filter(x => x.id !== pl.id);
     saveState();
     renderSidebar();
@@ -1061,10 +1274,23 @@ function formatDate(date) {
 
 function toast(message) {
   const el = $("#toast");
-  el.textContent = message;
-  el.classList.add("show");
+  if (!el) return;
   clearTimeout(window.__toastTimer);
-  window.__toastTimer = setTimeout(() => el.classList.remove("show"), 2300);
+  el.classList.remove("show");
+  el.innerHTML = "";
+  const icon = document.createElement("span");
+  icon.className = "toast-icon";
+  icon.textContent = "✓";
+  const text = document.createElement("span");
+  text.className = "toast-text";
+  text.textContent = String(message);
+  const bar = document.createElement("span");
+  bar.className = "toast-progress";
+  el.append(icon, text, bar);
+  requestAnimationFrame(() => el.classList.add("show"));
+  window.__toastTimer = setTimeout(() => {
+    el.classList.remove("show");
+  }, 2000);
 }
 
 function safeUrl(url) {
