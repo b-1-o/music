@@ -274,6 +274,13 @@ function bindEvents() {
     if (window.innerWidth > 620 || event.target.closest("button")) return;
     if (state.current) setExpandedPlayer(true);
   });
+  $("#playerBar .now-art")?.addEventListener("pointerup", event => {
+    if (window.innerWidth <= 620 && state.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      setExpandedPlayer(true);
+    }
+  }, { passive: false });
   $("#miniVideoExpand")?.addEventListener("click", () => setExpandedPlayer(true));
   $("#nowArt").addEventListener("click", () => {
     if (state.current) setExpandedPlayer(true);
@@ -1510,13 +1517,53 @@ function setExpandedPlayer(open) {
     toast("Choose a track first.");
     return;
   }
-  document.body.classList.toggle("player-expanded", !!open);
-  if (window.innerWidth <= 620) {
-    document.documentElement.classList.toggle("player-expanded-mobile", !!open);
-    document.body.style.overflow = open ? "hidden" : "";
-  }
+
+  const mobile = window.innerWidth <= 620;
   const full = $("#fullPlayer");
+  const mobileBar = $("#mobileTabBar");
+  const topbar = $(".topbar");
+  const miniPlayer = $("#playerBar");
+  const closeButton = $("#fullPlayerClose");
+
+  document.body.classList.toggle("player-expanded", !!open);
+  document.documentElement.classList.toggle("player-expanded-mobile", mobile && !!open);
+
+  if (mobile) {
+    document.body.style.overflow = open ? "hidden" : "";
+    document.documentElement.style.overflow = open ? "hidden" : "";
+
+    if (mobileBar) {
+      mobileBar.style.display = open ? "none" : "";
+      mobileBar.style.visibility = open ? "hidden" : "";
+      mobileBar.style.pointerEvents = open ? "none" : "";
+    }
+    if (topbar) {
+      topbar.style.display = open ? "none" : "";
+      topbar.style.pointerEvents = open ? "none" : "";
+    }
+    if (miniPlayer) {
+      miniPlayer.style.display = open ? "none" : "";
+      miniPlayer.style.pointerEvents = open ? "none" : "";
+    }
+    if (full) {
+      full.style.zIndex = "99999";
+      full.style.display = open ? "flex" : "";
+      full.style.visibility = open ? "visible" : "";
+      full.style.opacity = open ? "1" : "";
+      full.style.pointerEvents = open ? "auto" : "";
+      full.style.transform = open ? "none" : "";
+      full.style.transition = open ? "opacity .28s ease, transform .42s cubic-bezier(.16,1,.3,1)" : "";
+    }
+    if (closeButton) {
+      closeButton.style.display = "grid";
+      closeButton.style.visibility = "visible";
+      closeButton.style.opacity = "1";
+      closeButton.style.pointerEvents = "auto";
+    }
+  }
+
   if (full) full.setAttribute("aria-hidden", open ? "false" : "true");
+
   if (open) {
     updatePlayerUI();
     syncProgress();
