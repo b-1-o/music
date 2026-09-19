@@ -1,0 +1,76 @@
+/* mobile sidebar fix — loaded after styles.css */
+@media (max-width: 850px) {
+  .topbar {
+    z-index: 125 !important;
+  }
+
+  .sidebar {
+    left: 10px !important;
+    top: 10px !important;
+    bottom: 10px !important;
+    width: min(290px, 86vw) !important;
+    z-index: 130 !important;
+    transform: translate3d(-110%, 0, 0) !important;
+    visibility: visible !important;
+    pointer-events: none !important;
+    opacity: 1 !important;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    will-change: transform;
+  }
+
+  .sidebar.open {
+    transform: translate3d(0, 0, 0) !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-menu {
+    display: grid !important;
+    width: 38px !important;
+    height: 38px !important;
+    place-items: center !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 10px !important;
+    color: var(--muted) !important;
+    position: relative !important;
+    z-index: 140 !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .overlay,
+  #overlay {
+    display: none;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 120 !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .overlay.active,
+  #overlay.active {
+    display: block !important;
+  }
+
+  body.sidebar-open {
+    overflow: hidden !important;
+  }
+
+  .top-search input,
+  #searchInput,
+  #searchPanelInput {
+    font-size: 16px !important;
+    line-height: 1.2 !important;
+    -webkit-text-size-adjust: 100% !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .top-search input,
+  #searchInput,
+  #searchPanelInput {
+    font-size: 16px !important;
+    transform: none !important;
+  }
+}
