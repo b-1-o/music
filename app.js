@@ -53,6 +53,7 @@ let selectedBackgroundFile = null;
 const BG_DB_NAME = "b1api_assets";
 const PLAYLIST_COVER_PREFIX = "playlist-cover:";
 const playlistCoverObjectUrls = new Map();
+let editingPlaylistId = null;
 const BG_STORE = "files";
 
 function loadJSON(key, fallback) {
@@ -120,6 +121,12 @@ function bindEvents() {
   $("#backgroundBtn").addEventListener("click", () => $("#settingsDialog").showModal());
   $("#newPlaylistBtn").addEventListener("click", () => $("#playlistDialog").showModal());
   $("#createPlaylist").addEventListener("click", createPlaylist);
+  $("#playlistSettingsSave")?.addEventListener("click", savePlaylistSettings);
+  $("#playlistSettingsRemoveCover")?.addEventListener("click", removeEditingPlaylistCover);
+  $("#playlistSettingsCoverFile")?.addEventListener("change", event => {
+    const file = event.target.files?.[0];
+    if (file && $("#playlistSettingsCoverName")) $("#playlistSettingsCoverName").textContent = file.name;
+  });
   $("#playlistCoverFile")?.addEventListener("change", e => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -137,6 +144,10 @@ function bindEvents() {
   $("#bgOpacityRange")?.addEventListener("input", e => {
     if ($("#bgOpacityValue")) $("#bgOpacityValue").textContent = e.target.value + "%";
     state.settings.bgOpacity = Number(e.target.value);
+    applySettings();
+  });
+  $("#bgColorEnabled")?.addEventListener("change", e => {
+    state.settings.bgColorEnabled = e.target.checked;
     applySettings();
   });
   $("#bgBlurRange")?.addEventListener("input", e => {
@@ -276,6 +287,8 @@ function applySettings() {
   root.style.setProperty("--bg-image-blur", `${Math.max(0, Math.min(24, Number(s.bgBlur ?? 8)))}px`);
   root.style.setProperty("--blur", `${Math.min(24, Number(s.glass) || 0)}px`);
   document.body.classList.toggle("reduced-motion", s.motion === "reduced");
+  document.body.classList.toggle("no-bg-color", s.bgColorEnabled === false);
+  if ($("#bgColorEnabled")) $("#bgColorEnabled").checked = s.bgColorEnabled !== false;
   if (bgEl) {
     if (s.bgUrl?.trim()) {
       bgEl.style.backgroundImage = `url("${safeUrl(s.bgUrl)}")`;
@@ -423,6 +436,7 @@ function saveSettings() {
   state.settings.bgUrl = (value("bgUrlInput") || "").trim();
   state.settings.bgOpacity = Number(value("bgOpacityRange") || 28);
   state.settings.bgBlur = Number(value("bgBlurRange") || 8);
+  state.settings.bgColorEnabled = !!$("#bgColorEnabled")?.checked;
   state.settings.glass = Number(value("glassRange") || 16);
   state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
   if (state.settings.bgUrl) {
@@ -650,33 +664,77 @@ function renderPlaylists() {
   requestRender();
 }
 
-function renderPlaylistPreview(host,pl,closePreview){
-  const panel=document.createElement('div');
-  panel.className='playlist-open';
-  panel.setAttribute('role','dialog');
-  panel.setAttribute('aria-label',pl.name);
-  const tracks=pl.tracks.slice(0,6);
-  panel.innerHTML='<div class="playlist-open-media">'+playlistArtwork(pl)+'</div>'
-NaN
-NaN
-NaN
-NaN
-NaN
-NaN
-NaN
-NaN
-NaN
-NaN
-NaN
+function renderPlaylistPreview(host, pl, closePreview) {
+  const panel = document.createElement("div");
+  panel.className = "playlist-open";
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-label", pl.name);
+  const tracks = pl.tracks;
+  const rows = tracks.length ? tracks.map((track, i) => `
+    <button class="playlist-open-track" data-preview-track="${track.id}" type="button">
+      <span class="playlist-open-index">${String(i + 1).padStart(2, "0")}</span>
+      <img src="${safeUrl(track.thumbnail)}" alt="">
+      <span class="playlist-open-track-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.artist)}</small></span>
+      <span class="playlist-open-play">▶</span>
+    </button>`).join("") : '<div class="playlist-open-empty">This playlist has no tracks yet.</div>';
+  panel.innerHTML=`
+    <div class="playlist-open-media">${playlistArtwork(pl)}</div>
+    <div class="playlist-open-body">
+      <div class="playlist-open-scroll">
+        <div class="playlist-open-heading">
+          <div><span>${String(state.playlists.indexOf(pl)+1).padStart(2,"0")} / PLAYLIST</span><h3>${escapeHTML(pl.name)}</h3><p class="playlist-open-accent">${pl.tracks.length} ${pl.tracks.length===1?"track":"tracks"}</p></div>
+          <button type="button" class="playlist-open-settings" data-preview-settings aria-label="Playlist settings">⚙</button>
+        </div>
+        <div class="playlist-open-list">${rows}</div>
+      </div>
+      <div class="playlist-open-foot">
+        <span>LOCAL PLAYLIST</span>
+        <div><button class="playlist-open-action" data-preview-play type="button">PLAY ALL <span>▶</span></button><button class="playlist-open-close" type="button">CLOSE ×</button></div>
+      </div>
+    </div>`;
   host.appendChild(panel);
-  panel.addEventListener('click',function(event){event.stopPropagation();
-    if(event.target.closest('.playlist-open-close')){closePreview();return;}
-    const trackButton=event.target.closest('[data-preview-track]');
-    if(trackButton){const track=pl.tracks.find(function(x){return x.id===trackButton.dataset.previewTrack;});if(track){setQueue(pl.tracks,pl.tracks.findIndex(function(x){return x.id===track.id;}));playTrack(track);}return;}
-    if(event.target.closest('[data-preview-play]')){if(!pl.tracks.length)return toast('This playlist is empty.');setQueue(pl.tracks,0);playTrack(pl.tracks[0]);return;}
-    if(event.target.closest('[data-preview-library]')){openPlaylist(pl.id);return;}
+  panel.addEventListener("click", event => {
+    event.stopPropagation();
+    if(event.target.closest(".playlist-open-close")) return closePreview();
+    if(event.target.closest("[data-preview-settings]")) return openPlaylistSettings(pl.id);
+    const trackButton=event.target.closest("[data-preview-track]");
+    if(trackButton){
+      const track=pl.tracks.find(x=>x.id===trackButton.dataset.previewTrack);
+      if(track){setQueue(pl.tracks,pl.tracks.findIndex(x=>x.id===track.id));playTrack(track);}
+      return;
+    }
+    if(event.target.closest("[data-preview-play]")){
+      if(!pl.tracks.length) return toast("This playlist is empty.");
+      setQueue(pl.tracks,0); playTrack(pl.tracks[0]);
+    }
   });
 }
+
+function openPlaylistSettings(id){
+  if(!state.playlists.some(x=>x.id===id)) return;
+  editingPlaylistId=id;
+  if($("#playlistSettingsCoverFile")) $("#playlistSettingsCoverFile").value="";
+  if($("#playlistSettingsCoverName")) $("#playlistSettingsCoverName").textContent=playlistCoverObjectUrls.has(id)?"Custom cover is active.":"Using the first track cover.";
+  $("#playlistSettingsDialog")?.showModal();
+}
+
+async function savePlaylistSettings(){
+  if(!editingPlaylistId) return;
+  const file=$("#playlistSettingsCoverFile")?.files?.[0];
+  if(file) await setPlaylistCover(editingPlaylistId,file);
+  $("#playlistSettingsDialog")?.close();
+  editingPlaylistId=null;
+  toast("Playlist settings saved.");
+}
+
+async function removeEditingPlaylistCover(){
+  if(!editingPlaylistId) return;
+  await clearPlaylistCover(editingPlaylistId);
+  $("#playlistSettingsDialog")?.close();
+  editingPlaylistId=null;
+  toast("Playlist cover reset.");
+}
+
 async function loadPlaylistCovers() {
   for (const pl of state.playlists) {
     try {
@@ -1125,6 +1183,7 @@ function renderPlaylistPage(pl) {
         <p>${pl.tracks.length} ${pl.tracks.length === 1 ? "track" : "tracks"} · stored only in this browser</p>
         <div class="playlist-controls">
           <button class="primary-button" id="playPlaylist">▶ Play all</button>
+          <button class="ghost-button" id="openPlaylistSettingsPage">⚙ Settings</button>
           <button class="ghost-button" id="deletePlaylist">Delete</button>
         </div>
       </div>
@@ -1136,6 +1195,7 @@ function renderPlaylistPage(pl) {
     if (file) await setPlaylistCover(pl.id, file);
   });
   $(".playlist-remove-cover")?.addEventListener("click", () => clearPlaylistCover(pl.id));
+  $("#openPlaylistSettingsPage")?.addEventListener("click", () => openPlaylistSettings(pl.id));
 
   const host = $("#playlistTracks");
   if (!pl.tracks.length) {
