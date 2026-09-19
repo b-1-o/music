@@ -61,7 +61,57 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--pink);outline-o
 
 .back-button{margin:140px 0 0 7vw;color:#858792;font:500 8px "DM Mono"}.playlist-page-hero{display:grid;grid-template-columns:270px 1fr;gap:24px;margin:22px 7vw 18px;padding:12px;border-radius:22px}.playlist-page-art{width:270px;aspect-ratio:1;display:grid;place-items:center;overflow:hidden;border-radius:17px;background:#111}.playlist-page-art img{width:100%;height:100%;object-fit:cover}.playlist-page-copy{align-self:end;padding:12px}.playlist-page-copy h2{margin:14px 0 7px;font-size:clamp(46px,6vw,86px);line-height:.84;letter-spacing:-.08em}.playlist-page-copy p{color:#858792;font-size:10px}.playlist-controls{display:flex;gap:7px;margin-top:18px}
 
-.player{position:fixed;left:calc(var(--sidebar) + 16px);right:16px;bottom:16px;z-index:65;min-height:96px;padding:9px;border-radius:18px;display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(250px,1.5fr) auto;gap:12px;align-items:center}.now-playing{display:flex;align-items:center;gap:9px;min-width:0}.now-art{width:50px;height:50px;flex:none;border-radius:11px;overflow:hidden;background:#12141a}.now-art img{width:100%;height:100%;object-fit:cover}.now-copy{min-width:0}.now-copy strong,.now-copy span{display:block;max-width:290px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.now-copy strong{font-size:11px}.now-copy span{margin-top:4px;color:#777984;font-size:9px}.heart-button{width:32px;height:32px;color:#a2a4ae}.player-controls{min-width:0}.transport{display:flex;align-items:center;justify-content:center;gap:5px}.control-button,.play-button,.expand-button{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025);color:#868893;font:500 8px "DM Mono"}.play-button{width:38px;height:38px;border-radius:50%;background:#fff;color:#090a0d;border:0}.control-button:hover,.expand-button:hover{color:#fff;background:rgba(255,255,255,.06)}.control-button.active{color:var(--pink)}.progress-row{display:grid;grid-template-columns:30px 1fr 30px;gap:6px;align-items:center;margin-top:6px}.progress-row span{color:#62646e;text-align:center;font:500 7px "DM Mono"}input[type=range]{width:100%;accent-color:#fff}.player-side{display:flex;align-items:center;gap:5px}.volume{width:72px}
+.player{position:fixed;left:calc(var(--sidebar) + 16px);right:16px;bottom:16px;z-index:65;min-height:96px;padding:9px;border-radius:18px;display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(250px,1.5fr) auto;gap:12px;align-items:center}
+.full-player{position:fixed;inset:0;z-index:170;display:none;overflow:hidden;background:#050508;color:#fff}
+body.player-expanded{overflow:hidden}
+body.player-expanded .full-player{display:flex;flex-direction:column}
+body.player-expanded .player{opacity:0;pointer-events:none;transform:translateY(18px)}
+.full-player-bg{position:absolute;inset:-8%;background-position:center;background-size:cover;background-repeat:no-repeat;filter:blur(30px) saturate(1.18);transform:scale(1.12);opacity:.58;will-change:transform}
+.full-player-shade{position:absolute;inset:0;background:
+  radial-gradient(circle at 50% 34%,rgba(255,255,255,.08),transparent 22%),
+  linear-gradient(180deg,rgba(3,4,7,.58),rgba(4,4,7,.18) 42%,rgba(4,4,7,.74) 76%,#040407 100%)}
+.full-player-top{position:relative;z-index:2;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:10px;padding:24px 28px}
+.full-player-icon{width:44px;height:44px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.12);border-radius:50%;background:rgba(8,9,13,.34);color:#d7d8dd;font-size:20px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:.2s var(--ease)}
+.full-player-icon:hover{color:#fff;background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.22)}
+.full-player-label{text-align:center;min-width:0}
+.full-player-label span{display:block;color:rgba(255,255,255,.48);font:500 8px "DM Mono";letter-spacing:.18em}
+.full-player-label strong{display:block;margin-top:5px;color:rgba(255,255,255,.78);font-size:10px;font-weight:600}
+.full-player-center{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:0;padding:12px 24px 28px}
+.full-player-art-wrap{width:min(46vw,520px,55vh);aspect-ratio:1/1;padding:0;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);box-shadow:0 38px 120px rgba(0,0,0,.5)}
+.full-player-art{width:100%;height:100%;object-fit:cover}
+.full-player-copy{width:min(720px,90vw);margin-top:23px;text-align:center}
+.full-player-copy h2{margin:10px 0 0;font-size:clamp(30px,4vw,58px);line-height:.94;letter-spacing:-.065em;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.full-player-copy p{margin:9px 0 0;color:rgba(255,255,255,.56);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.full-player-bottom{position:relative;z-index:3;width:min(1120px,calc(100vw - 52px));margin:0 auto 28px;padding:18px 20px 19px;border:1px solid rgba(255,255,255,.11);border-radius:20px;background:rgba(7,8,12,.44);box-shadow:0 28px 80px rgba(0,0,0,.36);backdrop-filter:blur(18px) saturate(115%);-webkit-backdrop-filter:blur(18px) saturate(115%)}
+.full-player-meta{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.full-player-like{width:38px;height:38px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.1);border-radius:50%;background:rgba(255,255,255,.035);color:#a8aab4;font-size:18px;transition:.2s}.full-player-like:hover{color:#fff;background:rgba(255,255,255,.08)}.full-player-like.active{color:var(--pink)}
+.full-player-time{display:flex;gap:9px;color:rgba(255,255,255,.48);font:500 8px "DM Mono"}
+.full-player-progress{margin-top:10px}
+.full-player-progress input{display:block;height:18px}
+.full-player-transport{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px}
+.full-player-control,.full-player-play{width:40px;height:40px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.1);border-radius:50%;background:rgba(255,255,255,.035);color:#bfc0c7;font:500 9px "DM Mono";transition:.2s var(--ease)}
+.full-player-control:hover{color:#fff;background:rgba(255,255,255,.08)}
+.full-player-control.active{color:var(--pink);border-color:rgba(231,175,199,.28)}
+.full-player-play{width:48px;height:48px;border:0;background:#fff;color:#08090c;font-size:10px}.full-player-play:hover{transform:scale(1.04)}
+#yt-container{transition:opacity .2s ease}
+body.player-expanded #yt-container.ready{width:1px;height:1px;right:1px;bottom:1px;opacity:0;pointer-events:none;border:0;box-shadow:none}
+
+@media (max-width:620px){
+  .full-player-top{padding:16px 14px}
+  .full-player-center{padding:8px 16px 18px}
+  .full-player-art-wrap{width:min(76vw,52vh)}
+  .full-player-copy{margin-top:17px;width:92vw}
+  .full-player-copy h2{font-size:clamp(25px,8vw,36px)}
+  .full-player-copy p{font-size:10px}
+  .full-player-bottom{width:calc(100vw - 20px);margin-bottom:10px;padding:14px 13px 13px;border-radius:17px}
+  .full-player-transport{gap:7px}
+  .full-player-control{width:37px;height:37px}
+  .full-player-play{width:46px;height:46px}
+}
+@media (prefers-reduced-motion:reduce){
+  .full-player-icon,.full-player-control,.full-player-play{transition:none!important}
+}
+.now-playing{display:flex;align-items:center;gap:9px;min-width:0}.now-art{width:50px;height:50px;flex:none;border-radius:11px;overflow:hidden;background:#12141a}.now-art img{width:100%;height:100%;object-fit:cover}.now-copy{min-width:0}.now-copy strong,.now-copy span{display:block;max-width:290px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.now-copy strong{font-size:11px}.now-copy span{margin-top:4px;color:#777984;font-size:9px}.heart-button{width:32px;height:32px;color:#a2a4ae}.player-controls{min-width:0}.transport{display:flex;align-items:center;justify-content:center;gap:5px}.control-button,.play-button,.expand-button{width:32px;height:32px;display:grid;place-items:center;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.025);color:#868893;font:500 8px "DM Mono"}.play-button{width:38px;height:38px;border-radius:50%;background:#fff;color:#090a0d;border:0}.control-button:hover,.expand-button:hover{color:#fff;background:rgba(255,255,255,.06)}.control-button.active{color:var(--pink)}.progress-row{display:grid;grid-template-columns:30px 1fr 30px;gap:6px;align-items:center;margin-top:6px}.progress-row span{color:#62646e;text-align:center;font:500 7px "DM Mono"}input[type=range]{width:100%;accent-color:#fff}.player-side{display:flex;align-items:center;gap:5px}.volume{width:72px}
 #yt-container{display:none;position:fixed;right:25px;bottom:132px;z-index:64;width:310px;height:174px;border:1px solid var(--line);border-radius:14px;background:#000;overflow:hidden;box-shadow:0 25px 70px rgba(0,0,0,.45)}#yt-container.ready{display:block}#yt-player{width:100%;height:100%}.player-expanded #yt-container{width:min(46vw,620px);height:auto;aspect-ratio:16/9}
 .overlay{display:none;position:fixed;inset:0;z-index:68;background:rgba(0,0,0,.55)}
 
