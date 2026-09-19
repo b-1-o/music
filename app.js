@@ -1480,6 +1480,8 @@ function setExpandedPlayer(open) {
 function updatePlayerUI() {
   const track = state.current;
   const liked = !!track && state.liked.some(x => x.id === track.id);
+  const playerBar = $("#playerBar");
+  if (playerBar) playerBar.classList.toggle("has-track", !!track);
   $("#nowTitle").textContent = track?.title || "Nothing playing";
   $("#nowArtist").textContent = track?.artist || "Choose a track to begin";
   $("#likeCurrent").classList.toggle("active", liked);
