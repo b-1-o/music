@@ -342,7 +342,7 @@ function showView(view) {
 
 function renderSearchStatus() {
   const el = $("#searchStatus");
-  el.textContent = state.apiKey ? "YouTube connected · search is ready." : "Connect a YouTube API key to search.";
+  if (el) el.textContent = state.apiKey ? "YouTube connected · search is ready." : "Connect a YouTube API key to search.";
   updateApiStatusChip();
 }
 
@@ -944,7 +944,7 @@ async function searchYouTube(query) {
     if (!res.ok) throw new Error(data?.error?.message || "YouTube API request failed.");
     const items = (data.items || []).filter(item => item.id?.videoId);
     renderResults(items.map(normalizeYouTubeResult));
-    $("#searchStatus").textContent = `${items.length} results · YouTube`;
+    if ($("#searchStatus")) $("#searchStatus").textContent = `${items.length} results · YouTube`;
   } catch (error) {
     host.innerHTML = `<div class="empty-state glass"><div class="empty-icon">!</div><h3>Search failed.</h3><p>${escapeHTML(error.message || "Unknown error.")}</p></div>`;
     toast("YouTube search failed.");
