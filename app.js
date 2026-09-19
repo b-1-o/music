@@ -10,7 +10,9 @@ const STORAGE = {
 const DEFAULT_PLAYLISTS = [
   { id: crypto.randomUUID(), name: "Night Drive", tracks: [] },
   { id: crypto.randomUUID(), name: "Late Hours", tracks: [] },
-  { id: crypto.randomUUID(), name: "On Repeat", tracks: [] }
+  { id: crypto.randomUUID(), name: "On Repeat", tracks: [] },
+  { id: crypto.randomUUID(), name: "Archive", tracks: [] },
+  { id: crypto.randomUUID(), name: "4AM", tracks: [] }
 ];
 
 let state = {
@@ -227,22 +229,132 @@ function renderSidebar() {
 function renderPlaylists() {
   const host = $("#playlistCarousel");
   if (!state.playlists.length) {
-    host.innerHTML = `<div class="empty-state glass"><h3>No playlists yet.</h3><p>Create one from the + button in the sidebar.</p></div>`;
+    host.innerHTML = "<div class=\"empty-state glass\"><h3>No playlists yet.</h3><p>Create one from the + button in the sidebar.</p></div>";
     return;
   }
-  host.innerHTML = state.playlists.map(pl => {
+
+  host.classList.add("immersive-carousel");
+  host.innerHTML = state.playlists.map((pl, index) => {
     const art = playlistArtwork(pl);
     return `
-      <button class="playlist-card" data-playlist="${pl.id}">
+      <button class="playlist-card" data-playlist="${pl.id}" data-index="${index}">
         <div class="playlist-art">${art}</div>
+        <span class="playlist-card-number">${String(index + 1).padStart(2, "0")}</span>
         <div class="playlist-meta">
+          <small>PLAYLIST</small>
           <strong>${escapeHTML(pl.name)}</strong>
-          <span>${pl.tracks.length} ${pl.tracks.length === 1 ? "track" : "tracks"}</span>
+          <span>${pl.tracks.length} ${pl.tracks.length === 1 ? "TRACK" : "TRACKS"}</span>
         </div>
       </button>
     `;
   }).join("");
-  $$(".playlist-card", host).forEach(btn => btn.addEventListener("click", () => openPlaylist(btn.dataset.playlist)));
+
+  const buttons = $(".playlist-card", host);
+  buttons.forEach((btn, index) => btn.addEventListener("click", () => {
+    const centered = Math.abs(index - getNearestCarouselIndex(host, buttons)) < 0.5;
+    if (!centered) {
+      centerPlaylistCard(index, host, buttons);
+      return;
+    }
+    openPlaylist(btn.dataset.playlist);
+  }));
+
+  enhancePlaylistCarousel(host, buttons);
+  requestAnimationFrame(() => updatePlaylistCarousel(host, buttons));
+}
+
+let carouselDrag = null;
+
+function getNearestCarouselIndex(host, buttons) {
+  if (!buttons.length) return 0;
+  const center = host.getBoundingClientRect().left + host.clientWidth / 2;
+  let nearest = 0;
+  let min = Infinity;
+  buttons.forEach((button, index) => {
+    const box = button.getBoundingClientRect();
+    const distance = Math.abs((box.left + box.width / 2) - center);
+    if (distance < min) {
+      min = distance;
+      nearest = index;
+    }
+  });
+  return nearest;
+}
+
+function centerPlaylistCard(index, host, buttons) {
+  const button = buttons[index];
+  if (!button) return;
+  const target = button.offsetLeft - (host.clientWidth - button.offsetWidth) / 2;
+  host.scrollTo({ left: target, behavior: "smooth" });
+}
+
+function updatePlaylistCarousel(host, buttons) {
+  if (!host || !buttons.length) return;
+  const center = host.getBoundingClientRect().left + host.clientWidth / 2;
+
+  buttons.forEach((button, index) => {
+    const box = button.getBoundingClientRect();
+    const distance = (box.left + box.width / 2) - center;
+    const normalized = Math.max(-2.5, Math.min(2.5, distance / 300));
+    const abs = Math.abs(normalized);
+    const scale = abs < 0.5 ? 1.04 : Math.max(0.76, 1 - abs * 0.09);
+    const x = normalized * 10;
+    const y = abs * abs * 6;
+    const rotateY = normalized * -9;
+    const rotateZ = normalized * -2.8;
+    const opacity = Math.max(.13, 1 - Math.max(0, abs - 1.35) * .48);
+
+    button.style.transform = "translate3d(" + x + "px," + y + "px,0) rotateY(" + rotateY + "deg) rotateZ(" + rotateZ + "deg) scale(" + scale + ")";
+    button.style.opacity = String(opacity);
+    button.style.zIndex = String(100 - Math.round(abs * 15));
+    button.classList.toggle("is-center", abs < .5);
+  });
+}
+
+function enhancePlaylistCarousel(host, buttons) {
+  if (host.__b1apiEnhanced) return;
+  host.__b1apiEnhanced = true;
+
+  const onScroll = () => requestAnimationFrame(() => updatePlaylistCarousel(host, buttons));
+  host.addEventListener("scroll", onScroll, { passive: true });
+
+  host.addEventListener("wheel", (event) => {
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    if (!delta) return;
+    event.preventDefault();
+    host.scrollLeft += delta * 0.9;
+  }, { passive: false });
+
+  host.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    carouselDrag = {
+      x: event.clientX,
+      scroll: host.scrollLeft,
+      moved: false
+    };
+    host.setPointerCapture?.(event.pointerId);
+  });
+
+  host.addEventListener("pointermove", (event) => {
+    if (!carouselDrag) return;
+    const dx = event.clientX - carouselDrag.x;
+    if (Math.abs(dx) > 6) carouselDrag.moved = true;
+    if (carouselDrag.moved) {
+      event.preventDefault();
+      host.scrollLeft = carouselDrag.scroll - dx;
+    }
+  });
+
+  host.addEventListener("pointerup", () => {
+    if (!carouselDrag) return;
+    if (carouselDrag.moved) {
+      const index = getNearestCarouselIndex(host, buttons);
+      centerPlaylistCard(index, host, buttons);
+    }
+    carouselDrag = null;
+  });
+
+  window.addEventListener("resize", () => updatePlaylistCarousel(host, buttons));
 }
 
 function playlistArtwork(pl) {
