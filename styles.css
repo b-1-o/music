@@ -797,7 +797,7 @@ body::before,body::after{display:none!important}
 }
 @keyframes playlistPanelIn{
   from{opacity:0;transform:translateY(20px) scale(.97)}
-  to{opacity:var(--playlist-panel-opacity,.96);transform:none}
+  to{opacity:1;transform:none}
 }
 .playlist-carousel.is-open .playlist-open{
   cursor:default;
@@ -837,4 +837,41 @@ body:not(.player-expanded) .home-minimal{
   .search-panel-shell{height:64px;width:calc(100vw - 28px);border-radius:19px;grid-template-columns:27px minmax(0,1fr) 42px;padding-left:15px}
   .search-panel-shell input{font-size:13px}
   .search-panel-shell button{width:40px;height:40px;border-radius:12px}
+}
+
+
+/* Open playlist panel: opacity/blur apply to background layer only */
+.playlist-open{
+  opacity:1!important;
+  background:transparent!important;
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+  isolation:isolate;
+}
+.playlist-open::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(
+    145deg,
+    color-mix(in srgb,var(--theme-surface) 92%,transparent),
+    color-mix(in srgb,var(--theme-background) 96%,transparent)
+  );
+  opacity:var(--playlist-panel-opacity,.96);
+  -webkit-backdrop-filter:blur(var(--playlist-panel-blur,16px)) saturate(115%);
+  backdrop-filter:blur(var(--playlist-panel-blur,16px)) saturate(115%);
+}
+.playlist-open-media,
+.playlist-open-body{
+  position:relative;
+  z-index:1;
+}
+.playlist-open-media{background:transparent!important}
+.playlist-open-body{background:transparent!important}
+@keyframes playlistPanelIn{
+  from{opacity:0;transform:translateY(20px) scale(.97)}
+  to{opacity:1;transform:none}
 }
