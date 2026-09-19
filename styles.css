@@ -883,3 +883,64 @@ body:not(.player-expanded) .home-minimal{
   from{opacity:0;transform:translateY(20px) scale(.97)}
   to{opacity:1;transform:none}
 }
+
+
+/* === FINAL HOME IMMERSIVE STAGE === */
+.main:has(#homeView.active){
+  padding-bottom:0!important;
+  overflow:hidden!important;
+}
+#homeView.active{
+  height:calc(100dvh - var(--player) - 12px)!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+.home-minimal{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  padding:86px 0 0!important;
+  margin:0!important;
+  overflow:hidden!important;
+}
+.home-minimal-head{
+  width:100%!important;
+  max-width:none!important;
+  height:24px!important;
+  min-height:24px!important;
+  margin:0!important;
+  padding:0 22px 0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+}
+.home-minimal .carousel-frame{
+  width:100%!important;
+  height:calc(100% - 24px)!important;
+  min-height:0!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+}
+.home-minimal .playlist-carousel{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  max-height:none!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.playlist-carousel .playlist-stage-track{
+  width:100%!important;
+  height:100%!important;
+}
+@media(max-width:620px){
+  #homeView.active{height:calc(100dvh - var(--player) - 6px)!important}
+  .home-minimal{padding-top:74px!important}
+  .home-minimal-head{padding:0 14px!important;height:22px!important;min-height:22px!important}
+  .home-minimal .carousel-frame{height:calc(100% - 22px)!important}
+}
