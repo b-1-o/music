@@ -615,9 +615,17 @@ function resetAppearance() {
   if ($("#bgFileName")) $("#bgFileName").textContent = "No local image selected";
   toast("Appearance reset.");
 }
+function getUserPlaylists() {
+  return state.playlists.filter(pl => pl.id !== "local-audio");
+}
+
+function getLocalAudioTracks() {
+  return state.playlists.find(pl => pl.id === "local-audio")?.tracks || [];
+}
+
 function renderSidebar() {
   const host = $("#sidebarPlaylists");
-  host.innerHTML = state.playlists.map(pl => `
+  host.innerHTML = getUserPlaylists().map(pl => `
     <button class="sidebar-playlist" data-playlist="${pl.id}">
       ${smallPlaylistArt(pl)}
       <span>${escapeHTML(pl.name)}</span>
@@ -636,7 +644,8 @@ function renderPlaylists() {
   if (!host) return;
   host.__b1apiCleanup?.();
 
-  if (!state.playlists.length) {
+  const userPlaylists = getUserPlaylists();
+  if (!userPlaylists.length) {
     host.className = "playlist-carousel immersive-stage";
     host.innerHTML = '<div class="empty-state glass"><h3>No playlists yet.</h3><p>Create one from the + button.</p></div>';
     return;
@@ -645,7 +654,7 @@ function renderPlaylists() {
   host.className = "playlist-carousel immersive-stage";
   host.innerHTML =
     '<div class="playlist-stage-track">' +
-    state.playlists.map((pl, index) => `
+    userPlaylists.map((pl, index) => `
       <button class="playlist-card" data-playlist="${pl.id}" data-index="${index}" type="button" aria-label="Open ${escapeAttr(pl.name)}">
         <div class="playlist-art">${playlistArtwork(pl)}</div>
         <div class="playlist-card-sheen" aria-hidden="true"></div>
@@ -1180,7 +1189,9 @@ async function importLocalAudio(event) {
   saveState();
   renderSidebar();
   renderPlaylists();
+  updateCounts();
   refreshLocalAudioStatus();
+  if ($("#libraryContent")?.dataset.tab === "local") renderLibrary("local");
 
   if (lastTrack) {
     setQueue([lastTrack], 0);
@@ -1520,7 +1531,7 @@ function toggleLiked(track) {
 }
 
 function openAddToPlaylist(track) {
-  const options = state.playlists.map(pl => `
+  const options = getUserPlaylists().map(pl => `
     <button class="sidebar-playlist add-track-option" data-playlist="${pl.id}">
       ${smallPlaylistArt(pl)}
       <span>${escapeHTML(pl.name)}</span>
@@ -1664,22 +1675,112 @@ function renderPlaylistPage(pl) {
 function renderLibrary(tab) {
   const host = $("#libraryContent");
   host.dataset.tab = tab;
+
   if (tab === "liked") {
     if (!state.liked.length) return renderEmptyLibrary("No liked songs yet.", "Search for music and tap “Like”.");
     renderTrackList(host, state.liked);
-  } else if (tab === "recent") {
-    if (!state.recent.length) return renderEmptyLibrary("Nothing played yet.", "Play a YouTube track and it will appear here.");
-    renderTrackList(host, state.recent);
-  } else {
-    host.innerHTML = `<div class="library-list">${state.playlists.map(pl => `
-      <button class="discover-card glass" data-open-library-playlist="${pl.id}">
-        <span class="discover-art" style="overflow:hidden">${playlistArtwork(pl)}</span>
-        <span><strong>${escapeHTML(pl.name)}</strong><small>${pl.tracks.length} tracks</small></span>
-        <span class="arrow">→</span>
-      </button>
-    `).join("")}</div>`;
-    $$("[data-open-library-playlist]", host).forEach(btn => btn.addEventListener("click", () => openPlaylist(btn.dataset.openLibraryPlaylist)));
+    return;
   }
+
+  if (tab === "recent") {
+    if (!state.recent.length) return renderEmptyLibrary("Nothing played yet.", "Play a track and it will appear here.");
+    renderTrackList(host, state.recent);
+    return;
+  }
+
+  if (tab === "local") {
+    renderLocalAudioLibrary(host);
+    return;
+  }
+
+  const playlists = getUserPlaylists();
+  host.innerHTML = playlists.length
+    ? `<div class="library-list">${playlists.map(pl => `
+        <button class="discover-card glass" data-open-library-playlist="${pl.id}">
+          <span class="discover-art" style="overflow:hidden">${playlistArtwork(pl)}</span>
+          <span><strong>${escapeHTML(pl.name)}</strong><small>${pl.tracks.length} tracks</small></span>
+          <span class="arrow">→</span>
+        </button>
+      `).join("")}</div>`
+    : `<div class="empty-state glass"><div class="empty-icon">＋</div><h3>No playlists yet.</h3><p>Create a playlist from the + button.</p></div>`;
+
+  $("[data-open-library-playlist]", host).forEach(btn =>
+    btn.addEventListener("click", () => openPlaylist(btn.dataset.openLibraryPlaylist))
+  );
+}
+
+function renderLocalAudioLibrary(host) {
+  const tracks = getLocalAudioTracks();
+
+  host.innerHTML = `
+    <div class="local-library-head glass">
+      <div>
+        <span class="eyebrow">LOCAL FILES</span>
+        <h3>Local audio</h3>
+        <p>Audio you imported into this browser. Files stay on this device.</p>
+      </div>
+      <button class="primary-button" id="libraryImportLocalAudio" type="button">＋ Import audio</button>
+    </div>
+    ${tracks.length
+      ? `<div class="library-list local-audio-list">${tracks.map(track => `
+          <div class="track-row local-audio-row">
+            <div class="track-thumb local-audio-thumb"><span>♪</span></div>
+            <button class="track-main track-play" data-local-play="${escapeAttr(track.id)}" style="text-align:left">
+              <strong>${escapeHTML(track.title)}</strong>
+              <span>Local audio</span>
+            </button>
+            <span class="track-artist">LOCAL</span>
+            <span class="track-duration">OFFLINE</span>
+            <div class="track-actions">
+              <button class="track-action" data-local-add="${escapeAttr(track.id)}" title="Add to playlist">＋</button>
+              <button class="track-action" data-local-remove="${escapeAttr(track.id)}" title="Remove local file">×</button>
+            </div>
+          </div>
+        `).join("")}</div>`
+      : `<div class="empty-state glass local-library-empty"><div class="empty-icon">♪</div><h3>No local audio yet.</h3><p>Import audio files you already have on this device, then add them to any playlist.</p><button class="ghost-button" id="libraryImportLocalAudioEmpty" type="button">Import audio</button></div>`}
+  `;
+
+  const importButtons = $("#libraryImportLocalAudio, #libraryImportLocalAudioEmpty", host);
+  importButtons.forEach(btn => btn.addEventListener("click", () => $("#localAudioInput")?.click()));
+
+  const localMap = new Map(tracks.map(track => [track.id, track]));
+
+  $("[data-local-play]", host).forEach(btn => btn.addEventListener("click", () => {
+    const track = localMap.get(btn.dataset.localPlay);
+    if (!track) return;
+    setQueue(tracks, tracks.findIndex(x => x.id === track.id));
+    playTrack(track);
+  }));
+
+  $("[data-local-add]", host).forEach(btn => btn.addEventListener("click", () => {
+    const track = localMap.get(btn.dataset.localAdd);
+    if (track) openAddToPlaylist(track);
+  }));
+
+  $("[data-local-remove]", host).forEach(btn => btn.addEventListener("click", async () => {
+    const track = localMap.get(btn.dataset.localRemove);
+    if (track) await removeLocalAudio(track);
+  }));
+}
+
+async function removeLocalAudio(track) {
+  try { await deleteAsset(track.audioKey); } catch {}
+  const localPlaylist = state.playlists.find(pl => pl.id === "local-audio");
+  if (localPlaylist) {
+    localPlaylist.tracks = localPlaylist.tracks.filter(x => x.id !== track.id);
+  }
+
+  state.recent = state.recent.filter(x => x.id !== track.id);
+  state.liked = state.liked.filter(x => x.id !== track.id);
+
+  if (state.current?.id === track.id) stopPlayback();
+
+  saveState();
+  updateCounts();
+  renderSidebar();
+  renderPlaylists();
+  if ($("#libraryContent")?.dataset.tab === "local") renderLibrary("local");
+  toast("Local audio removed.");
 }
 
 function renderTrackList(host, tracks) {
@@ -1729,6 +1830,8 @@ function renderQueue() {
 function updateCounts() {
   $("#likedCount").textContent = state.liked.length;
   $("#recentCount").textContent = state.recent.length;
+  const localCount = $("#localAudioCount");
+  if (localCount) localCount.textContent = getLocalAudioTracks().length;
 }
 
 function formatTime(seconds) {
