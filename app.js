@@ -118,7 +118,7 @@ function init() {
 }
 
 function bindEvents() {
-  $(".nav-item[data-view]").forEach(btn => btn.addEventListener("click", () => {
+  $$(".nav-item[data-view]").forEach(btn => btn.addEventListener("click", () => {
     if (btn.dataset.view === "search") {
       resetSearchView();
       $("#searchInput")?.focus();
@@ -588,8 +588,8 @@ function renderSidebar() {
       <span>${escapeHTML(pl.name)}</span>
     </button>
   `).join("");
-  $(".sidebar-playlist", host).forEach(btn => btn.addEventListener("click", () => {
-    $(".sidebar-playlist", host).forEach(x => x.classList.remove("is-selected"));
+  $$(".sidebar-playlist", host).forEach(btn => btn.addEventListener("click", () => {
+    $$(".sidebar-playlist", host).forEach(x => x.classList.remove("is-selected"));
     btn.classList.add("is-selected", "is-switching");
     window.setTimeout(() => btn.classList.remove("is-switching"), 360);
     openPlaylist(btn.dataset.playlist);
@@ -1344,7 +1344,7 @@ function addToPlaylist(id, track) {
 function openPlaylist(id) {
   const pl = state.playlists.find(x => x.id === id);
   if (!pl) return;
-  $(".view").forEach(x => x.classList.remove("active"));
+  $$(".view").forEach(x => x.classList.remove("active"));
   const view = $("#playlistView");
   view.classList.add("active", "playlist-switching");
   view.style.setProperty("--playlist-switch-index", String(Math.max(0, state.playlists.indexOf(pl))));
@@ -1352,7 +1352,7 @@ function openPlaylist(id) {
   view.__playlistSwitchTimer = window.setTimeout(() => {
     view.classList.remove("playlist-switching");
   }, 520);
-  $(".nav-item[data-view]").forEach(x => x.classList.remove("active"));
+  $$(".nav-item[data-view]").forEach(x => x.classList.remove("active"));
   renderPlaylistPage(pl);
 }
 
