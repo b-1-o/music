@@ -1999,3 +1999,36 @@ body:has(#homeView.active){
   .full-player-art-wrap{width:min(84vw,360px)!important}
   .full-player-copy h2{font-size:clamp(24px,7.8vw,34px)!important}
 }
+
+
+/* === MOBILE FULL PLAYER ENTRANCE === */
+@media(max-width:620px){
+  .full-player.mobile-player-enter{
+    animation:mobileFullPlayerIn .42s cubic-bezier(.16,1,.3,1) both;
+  }
+  .full-player.mobile-player-enter .full-player-art-wrap{
+    animation:mobileFullArtIn .5s .04s cubic-bezier(.16,1,.3,1) both;
+  }
+  .full-player.mobile-player-enter .full-player-copy{
+    animation:mobileFullCopyIn .38s .12s cubic-bezier(.16,1,.3,1) both;
+  }
+  .full-player.mobile-player-enter .full-player-bottom{
+    animation:mobileFullControlsIn .34s .16s ease both;
+  }
+  @keyframes mobileFullPlayerIn{
+    from{opacity:0;transform:translate3d(0,18px,0) scale(1.015)}
+    to{opacity:1;transform:none}
+  }
+  @keyframes mobileFullArtIn{
+    from{opacity:0;transform:translate3d(0,12px,0) scale(.94)}
+    to{opacity:1;transform:none}
+  }
+  @keyframes mobileFullCopyIn{
+    from{opacity:0;transform:translate3d(0,8px,0)}
+    to{opacity:1;transform:none}
+  }
+  @keyframes mobileFullControlsIn{
+    from{opacity:0;transform:translate3d(0,12px,0)}
+    to{opacity:1;transform:none}
+  }
+}
