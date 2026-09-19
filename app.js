@@ -1105,6 +1105,8 @@ function stopPlayback() {
   state.queue = [];
   state.queueIndex = -1;
   state.muted = false;
+  if (state.yt?.unMute) state.yt.unMute();
+  $("#volumeBtn").textContent = "◖";
   updatePlayerUI();
   const bar = $("#progressBar");
   if (bar) bar.value = 0;
