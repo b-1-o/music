@@ -129,7 +129,35 @@ function bindEvents() {
     const duration = state.yt.getDuration();
     state.yt.seekTo((Number(e.target.value) / 100) * duration, true);
   });
-  $("#expandPlayer").addEventListener("click", () => document.body.classList.toggle("player-expanded"));
+  $("#expandPlayer").addEventListener("click", () => setExpandedPlayer(!document.body.classList.contains("player-expanded")));
+  $("#nowArt").addEventListener("click", () => {
+    if (state.current) setExpandedPlayer(true);
+  });
+  $("#fullPlayerClose").addEventListener("click", () => setExpandedPlayer(false));
+  $("#fullPlayerQueue").addEventListener("click", () => {
+    renderQueue();
+    $("#queueDialog").showModal();
+  });
+  $("#fullPlayerPlay").addEventListener("click", togglePlay);
+  $("#fullPlayerPrev").addEventListener("click", () => playRelative(-1));
+  $("#fullPlayerNext").addEventListener("click", () => playRelative(1));
+  $("#fullPlayerShuffle").addEventListener("click", () => {
+    state.shuffled = !state.shuffled;
+    syncPlayerModes();
+    toast(state.shuffled ? "Shuffle on." : "Shuffle off.");
+  });
+  $("#fullPlayerRepeat").addEventListener("click", () => {
+    state.repeated = !state.repeated;
+    syncPlayerModes();
+    toast(state.repeated ? "Repeat on." : "Repeat off.");
+  });
+  $("#fullPlayerLike").addEventListener("click", () => state.current && toggleLiked(state.current));
+  $("#fullPlayerProgress").addEventListener("input", e => {
+    if (!state.yt || !state.yt.getDuration) return;
+    const duration = state.yt.getDuration();
+    state.yt.seekTo((Number(e.target.value) / 100) * duration, true);
+  });
+
   $("#backFromPlaylist").addEventListener("click", () => showView("library"));
   $("#mobileMenuBtn").addEventListener("click", () => {
     $(".sidebar").classList.toggle("open");
@@ -700,10 +728,10 @@ function onYTStateChange(event) {
   const states = window.YT?.PlayerState;
   if (!states) return;
   if (event.data === states.PLAYING) {
-    $("#playBtn").textContent = "Ⅱ";
+    syncPlayerModes();
     syncProgress();
   } else {
-    $("#playBtn").textContent = "▶";
+    syncPlayerModes();
     if (progressTimer) cancelAnimationFrame(progressTimer);
     progressTimer = 0;
   }
@@ -725,9 +753,13 @@ function syncProgress() {
     }
     const duration = state.yt.getDuration?.() || 0;
     const current = state.yt.getCurrentTime?.() || 0;
+    const progress = duration ? (current / duration) * 100 : 0;
     $("#currentTime").textContent = formatTime(current);
     $("#duration").textContent = formatTime(duration);
-    $("#progressBar").value = duration ? (current / duration) * 100 : 0;
+    $("#progressBar").value = progress;
+    $("#fullPlayerCurrentTime") && ($("#fullPlayerCurrentTime").textContent = formatTime(current));
+    $("#fullPlayerDuration") && ($("#fullPlayerDuration").textContent = formatTime(duration));
+    $("#fullPlayerProgress") && ($("#fullPlayerProgress").value = progress);
     if (state.yt.getPlayerState?.() === 1) {
       progressTimer = requestAnimationFrame(tick);
     } else {
@@ -738,15 +770,55 @@ function syncProgress() {
 }
 
 
+function syncPlayerModes() {
+  $("#shuffleBtn")?.classList.toggle("active", state.shuffled);
+  $("#repeatBtn")?.classList.toggle("active", state.repeated);
+  $("#fullPlayerShuffle")?.classList.toggle("active", state.shuffled);
+  $("#fullPlayerRepeat")?.classList.toggle("active", state.repeated);
+  const playing = state.yt?.getPlayerState?.() === 1;
+  const label = playing ? "Ⅱ" : "▶";
+  $("#playBtn") && ($("#playBtn").textContent = label);
+  $("#fullPlayerPlay") && ($("#fullPlayerPlay").textContent = label);
+}
+
+function setExpandedPlayer(open) {
+  if (open && !state.current) {
+    toast("Choose a track first.");
+    return;
+  }
+  document.body.classList.toggle("player-expanded", !!open);
+  const full = $("#fullPlayer");
+  if (full) full.setAttribute("aria-hidden", open ? "false" : "true");
+  if (open) {
+    updatePlayerUI();
+    syncProgress();
+  }
+}
+
 function updatePlayerUI() {
   const track = state.current;
+  const liked = !!track && state.liked.some(x => x.id === track.id);
   $("#nowTitle").textContent = track?.title || "Nothing playing";
   $("#nowArtist").textContent = track?.artist || "Choose a track to begin";
-  $("#likeCurrent").classList.toggle("active", !!track && state.liked.some(x => x.id === track.id));
-  $("#likeCurrent").textContent = track && state.liked.some(x => x.id === track.id) ? "♥" : "♡";
+  $("#likeCurrent").classList.toggle("active", liked);
+  $("#likeCurrent").textContent = liked ? "♥" : "♡";
   $("#nowArt").innerHTML = track?.thumbnail
     ? `<img src="${safeUrl(track.thumbnail)}" alt="">`
     : "<span>♪</span>";
+
+  const fullArt = $("#fullPlayerArt");
+  const fullBg = $("#fullPlayerBg");
+  if (fullArt) {
+    fullArt.src = track?.thumbnail ? safeUrl(track.thumbnail) : "";
+    fullArt.alt = track?.title ? `${track.title} — ${track.artist || "YouTube"}` : "";
+  }
+  if (fullBg) {
+    fullBg.style.backgroundImage = track?.thumbnail ? `url("${safeUrl(track.thumbnail)}")` : "none";
+  }
+  $("#fullPlayerTitle") && ($("#fullPlayerTitle").textContent = track?.title || "Nothing playing");
+  $("#fullPlayerArtist") && ($("#fullPlayerArtist").textContent = track?.artist || "Choose a track to begin");
+  $("#fullPlayerLike") && ($("#fullPlayerLike").classList.toggle("active", liked), $("#fullPlayerLike").textContent = liked ? "♥" : "♡");
+  syncPlayerModes();
 }
 
 function setBackgroundFromTrack(track) {
@@ -1096,7 +1168,14 @@ function enhanceShortcuts() {
     if (event.key.toLowerCase() === "h" && !typing) showView("home");
     if (event.key.toLowerCase() === "s" && !typing) showView("search");
     if (event.key.toLowerCase() === "l" && !typing) showView("library");
-    if (event.key === "Escape") { closeFirstRun(false); $(".sidebar")?.classList.remove("open"); }
+    if (event.key === "Escape") {
+      if (document.body.classList.contains("player-expanded")) {
+        setExpandedPlayer(false);
+        return;
+      }
+      closeFirstRun(false);
+      $(".sidebar")?.classList.remove("open");
+    }
   });
 }
 
