@@ -170,9 +170,9 @@ function bindEvents() {
     const label = $("#playlistCoverFileName");
     if (label) label.textContent = file.name;
   });
-  $(".playback-mode button").forEach(btn => btn.addEventListener("click", () => {
+  $$(".playback-mode button").forEach(btn => btn.addEventListener("click", () => {
     state.settings.playbackMode = btn.dataset.playback || "youtube";
-    $(".playback-mode button").forEach(x => x.classList.toggle("active", x === btn));
+    $$(".playback-mode button").forEach(x => x.classList.toggle("active", x === btn));
     saveState();
     refreshLocalAudioStatus();
   }));
@@ -457,7 +457,7 @@ function applySettings() {
   if ($("#playlistPanelBlurValue")) $("#playlistPanelBlurValue").textContent = `${s.playlistPanelBlur ?? 16}px`;
   if ($("#profileNameInput")) $("#profileNameInput").value = state.profileName || "";
   refreshLocalAudioStatus();
-  $(".segmented button").forEach(btn => {
+  $$(".segmented button").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.motion === s.motion);
     if (btn.dataset.playback) btn.classList.toggle("active", btn.dataset.playback === (s.playbackMode || "youtube"));
   });
