@@ -1209,3 +1209,56 @@ body:has(#homeView.active){
   content-visibility:auto;
   contain-intrinsic-size:0 250px;
 }
+
+
+/* === SIDEBAR PLAYLIST SWITCH ANIMATION === */
+.sidebar-playlist{
+  will-change:transform,opacity,background-color;
+}
+.sidebar-playlist.is-selected{
+  color:var(--theme-primary)!important;
+  border-color:var(--line-strong)!important;
+  background:color-mix(in srgb,var(--theme-primary) 6%,transparent)!important;
+}
+.sidebar-playlist.is-switching{
+  animation:sidebarPlaylistSwitch .36s var(--ease) both;
+}
+@keyframes sidebarPlaylistSwitch{
+  0%{transform:translateX(-8px) scale(.985);opacity:.45;filter:blur(1px)}
+  55%{transform:translateX(3px) scale(1.012);opacity:1;filter:blur(0)}
+  100%{transform:translateX(0) scale(1);opacity:1;filter:none}
+}
+
+/* Animate the playlist page even when it is already the active view. */
+#playlistView.playlist-switching #playlistHero{
+  animation:playlistHeroSwitch .44s var(--ease) both;
+}
+#playlistView.playlist-switching #playlistTracks{
+  animation:playlistTracksSwitch .48s var(--ease) .04s both;
+}
+@keyframes playlistHeroSwitch{
+  from{opacity:0;transform:translateY(14px) scale(.988);filter:blur(3px)}
+  to{opacity:1;transform:none;filter:none}
+}
+@keyframes playlistTracksSwitch{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:none}
+}
+
+/* Search reset should feel intentional when returning to the empty Search screen. */
+#searchView:not(.search-has-results) .search-panel-shell{
+  animation:searchResetIn .32s var(--ease) both;
+}
+@keyframes searchResetIn{
+  from{opacity:0;transform:translateY(8px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .sidebar-playlist.is-switching,
+  #playlistView.playlist-switching #playlistHero,
+  #playlistView.playlist-switching #playlistTracks,
+  #searchView:not(.search-has-results) .search-panel-shell{
+    animation:none!important;
+  }
+}
