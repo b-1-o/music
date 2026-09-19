@@ -302,10 +302,15 @@ function saveSettings() {
   if (state.settings.bgUrl) {
     state.settings.bgMode = "url";
     clearStoredBackground().catch(() => {});
+    if (backgroundObjectUrl) {
+      URL.revokeObjectURL(backgroundObjectUrl);
+      backgroundObjectUrl = null;
+    }
   }
   state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
   saveState();
   applySettings();
+  if (state.settings.bgMode === "file" && !state.settings.bgUrl) loadSavedBackground();
   $("#settingsDialog").close();
   toast("Appearance saved.");
 }
@@ -654,10 +659,12 @@ function togglePlay() {
 }
 
 function setupYouTube() {
-  window.onYouTubeIframeAPIReady = () => {
+  const ready = () => {
     state.ytApiReady = true;
     if (state.current) ensureYouTubePlayer();
   };
+  window.onYouTubeIframeAPIReady = ready;
+  if (window.YT?.Player) ready();
 }
 
 function ensureYouTubePlayer() {
