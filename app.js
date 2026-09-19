@@ -1562,7 +1562,17 @@ function setExpandedPlayer(open) {
     }
   }
 
-  if (full) full.setAttribute("aria-hidden", open ? "false" : "true");
+  if (full) {
+    full.classList.toggle("mobile-player-enter", mobile && !!open);
+    full.setAttribute("aria-hidden", open ? "false" : "true");
+  }
+
+  if (open && mobile && full) {
+    requestAnimationFrame(() => full.classList.add("mobile-player-enter-active"));
+  }
+  if (!open && full) {
+    full.classList.remove("mobile-player-enter-active", "mobile-player-enter");
+  }
 
   if (open) {
     updatePlayerUI();
