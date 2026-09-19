@@ -322,7 +322,9 @@ function applySettings() {
   root.style.setProperty("--bg-image-opacity", String(Math.max(0, Math.min(100, Number(s.bgOpacity ?? 100))) / 100));
   root.style.setProperty("--bg-image-blur", `${Math.max(0, Math.min(24, Number(s.bgBlur ?? 0)))}px`);
   root.style.setProperty("--glass-blur", `${Math.max(0, Math.min(35, Number(s.glass ?? 16)))}px`);
-  root.style.setProperty("--carousel-opacity", String(Math.max(20, Math.min(100, Number(s.carouselOpacity ?? 100))) / 100));
+  const carouselOpacity = Math.max(20, Math.min(100, Number(s.carouselOpacity ?? 100)));
+  root.style.setProperty("--carousel-opacity", String(carouselOpacity / 100));
+  root.style.setProperty("--carousel-fill-pct", `${Math.max(10, Math.round(carouselOpacity * 0.72))}%`);
   root.style.setProperty("--carousel-blur", `${Math.max(0, Math.min(18, Number(s.carouselBlur ?? 0)))}px`);
   document.body.classList.toggle("reduced-motion", s.motion === "reduced");
   document.body.classList.toggle("no-bg-color", s.bgColorEnabled === false);
