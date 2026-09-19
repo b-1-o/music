@@ -34,6 +34,11 @@
       </div>
       <div id="sidebarPlaylists" class="sidebar-playlists"></div>
 
+      <div id="yt-container" class="youtube-host" aria-hidden="true">
+    <div class="youtube-mini-head"><div><span>VIDEO PREVIEW</span><strong id="miniVideoTitle">b1api / YouTube</strong></div><button id="miniVideoExpand" class="youtube-mini-expand" aria-label="Open fullscreen player">⤢</button></div>
+    <div class="youtube-mini-screen"><div id="yt-player"></div></div>
+  </div
+
       <div class="sidebar-bottom">
         <button class="nav-item subtle" id="settingsBtn"><span>⚙</span> Settings</button>
       </div>
@@ -232,6 +237,15 @@
       <small>Grayscale is the default. Every color can be changed locally.</small>
     </div>
     <div class="setting-block">
+      <div class="setting-inline">
+        <label class="switch-field">
+          <input id="bgColorEnabled" type="checkbox" checked />
+          <span class="switch-ui"></span>
+          <span>Use background color</span>
+        </label>
+        <small>Turn this off to let the selected image show without the theme color layer.</small>
+      </div>
+
       <label>Background image</label>
       <div class="bg-file-row">
         <label class="file-button" for="bgFileInput">Choose image</label>
@@ -309,7 +323,24 @@
     </div>
   </dialog>
 
-  <dialog id="queueDialog" class="modal glass queue-modal">
+  <dialog id="playlistSettingsDialog" class="modal glass playlist-settings-modal">
+    <div class="modal-head">
+      <div><span class="eyebrow">PLAYLIST</span><h3>Settings</h3></div>
+      <button class="icon-button" data-close-dialog="playlistSettingsDialog">×</button>
+    </div>
+    <div class="setting-block">
+      <label>Cover image</label>
+      <label class="file-button" for="playlistSettingsCoverFile">Choose image</label>
+      <input id="playlistSettingsCoverFile" type="file" accept="image/*" hidden />
+      <small id="playlistSettingsCoverName">Choose a custom cover or keep the first track cover.</small>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost-button" id="playlistSettingsRemoveCover" type="button">Use first track</button>
+      <button class="primary-button" id="playlistSettingsSave" type="button">Save</button>
+    </div>
+  </dialog>
+
+<dialog id="queueDialog" class="modal glass queue-modal">
     <div class="modal-head">
       <div>
         <span class="eyebrow">QUEUE</span>
@@ -322,10 +353,7 @@
 
   <div id="toast" class="toast glass"></div>
 
-  <div id="yt-container" class="youtube-host" aria-hidden="true">
-    <div class="youtube-mini-head"><div><span>VIDEO PREVIEW</span><strong id="miniVideoTitle">b1api / YouTube</strong></div><button id="miniVideoExpand" class="youtube-mini-expand" aria-label="Open fullscreen player">⤢</button></div>
-    <div class="youtube-mini-screen"><div id="yt-player"></div></div>
-  </div>
+>
 
   <script src="./config.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
