@@ -290,8 +290,8 @@ function bindEvents() {
     $(".sidebar").classList.remove("open");
     $(".overlay").style.display = "none";
   });
-  $("[data-close-dialog]").forEach(btn => btn.addEventListener("click", () => document.getElementById(btn.dataset.closeDialog).close()));
-  $("dialog").forEach(dialog => {
+  $$("[data-close-dialog]").forEach(btn => btn.addEventListener("click", () => document.getElementById(btn.dataset.closeDialog).close()));
+  $$("dialog").forEach(dialog => {
     dialog.addEventListener("click", event => {
       if (event.target === dialog) dialog.close();
     });
