@@ -210,8 +210,9 @@ function bindEvents() {
     applySettings();
   });
   $("#bgBlurRange")?.addEventListener("input", e => {
-    if ($("#bgBlurValue")) $("#bgBlurValue").textContent = e.target.value + "px";
-    state.settings.bgBlur = 0;
+    const value = Number(e.target.value);
+    if ($("#bgBlurValue")) $("#bgBlurValue").textContent = value + "px";
+    state.settings.bgBlur = value;
     applySettings();
   });
   $("#bgFileInput")?.addEventListener("change", handleBackgroundFile);
@@ -740,6 +741,12 @@ function renderPlaylists() {
   window.addEventListener("pointerup", onPointerUp, { passive: false });
   window.addEventListener("pointercancel", onPointerUp, { passive: false });
   window.addEventListener("keydown", onKey);
+  const onStageClick = (event) => {
+    if (host.classList.contains("is-open") && event.target === host) {
+      closePreview();
+    }
+  };
+  host.addEventListener("click", onStageClick);
   host.addEventListener("wheel", onWheel, { passive: false });
   host.addEventListener("pointerdown", onPointerDown, { passive: false });
 
@@ -752,6 +759,7 @@ function renderPlaylists() {
     window.removeEventListener("keydown", onKey);
     host.removeEventListener("wheel", onWheel);
     host.removeEventListener("pointerdown", onPointerDown);
+    host.removeEventListener("click", onStageClick);
   };
 
   requestRender();
@@ -786,12 +794,6 @@ function renderPlaylistPreview(host, pl, closePreview) {
       </div>
     </div>`;
   host.appendChild(panel);
-  host.addEventListener("click", function onOpenOutside(event){
-    if (event.target === host) {
-      closePreview();
-      host.removeEventListener("click", onOpenOutside);
-    }
-  }, { once:false });
   panel.addEventListener("click", event => {
     event.stopPropagation();
     if(event.target.closest(".playlist-open-close")) return closePreview();
