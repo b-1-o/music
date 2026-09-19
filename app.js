@@ -336,7 +336,10 @@ function showView(view) {
       if (panelInput) panelInput.value = searchInput.value;
     }
   }
-  if (view === "search") renderSearchStatus();
+  if (view === "search") {
+    $("#searchView")?.classList.remove("search-has-results");
+    renderSearchStatus();
+  }
   if (view === "library") renderLibrary("liked");
 }
 
@@ -925,6 +928,7 @@ async function searchYouTube(query) {
   showView("search");
   renderSearchStatus();
   const host = $("#searchResults");
+  $("#searchView")?.classList.add("search-has-results");
   host.innerHTML = `<div class="search-loading"><span></span><span></span><span></span></div>`;
   if (!state.apiKey) {
     if (localStorage.getItem("b1api_first_run_seen") === "1") openApiDialog();
