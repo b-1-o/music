@@ -221,9 +221,18 @@
     </div>
 
     <div class="setting-block">
+      <label>Background image</label>
+      <div class="bg-file-row">
+        <label class="file-button" for="bgFileInput">Choose image</label>
+        <input id="bgFileInput" type="file" accept="image/*" hidden />
+        <button class="ghost-button bg-clear-button" id="clearBgFile" type="button">Remove</button>
+      </div>
+      <small id="bgFileName">No file selected</small>
+    </div>
+    <div class="setting-block">
       <label>Background image URL</label>
       <input id="bgUrlInput" class="text-input" placeholder="https://..." />
-      <small>Saved locally. Use an image you have permission to use.</small>
+      <small>Use a URL only when you prefer a remote image.</small>
     </div>
 
     <div class="setting-block">
