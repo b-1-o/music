@@ -16,7 +16,8 @@ const DEFAULT_PLAYLISTS = [
 ];
 
 let state = {
-  apiKey: localStorage.getItem(STORAGE.apiKey) || "",
+  apiKey: window.B1API_CONFIG?.youtubeApiKey?.trim() || "",
+  profileName: localStorage.getItem("b1api_profile_name") || "",
   playlists: loadJSON(STORAGE.playlists, DEFAULT_PLAYLISTS),
   liked: loadJSON(STORAGE.liked, []),
   recent: loadJSON(STORAGE.recent, []),
@@ -62,6 +63,7 @@ function init() {
   bindEvents();
   updateCounts();
   updatePlayerUI();
+  renderLocalProfile();
   showView("home");
   setupYouTube();
 }
@@ -82,14 +84,6 @@ function bindEvents() {
   $("#backgroundBtn").addEventListener("click", () => $("#settingsDialog").showModal());
   $("#newPlaylistBtn").addEventListener("click", () => $("#playlistDialog").showModal());
   $("#createPlaylist").addEventListener("click", createPlaylist);
-  $("#saveApi").addEventListener("click", saveApiKey);
-  $("#clearApi").addEventListener("click", () => {
-    state.apiKey = "";
-    localStorage.removeItem(STORAGE.apiKey);
-    $("#apiKeyInput").value = "";
-    toast("YouTube API key cleared.");
-    renderSearchStatus();
-  });
   $("#saveSettings").addEventListener("click", saveSettings);
   $("#playBtn").addEventListener("click", togglePlay);
   $("#nextBtn").addEventListener("click", () => playRelative(1));
@@ -176,21 +170,7 @@ function renderSearchStatus() {
 }
 
 function openApiDialog() {
-  $("#apiKeyInput").value = state.apiKey;
   $("#apiDialog").showModal();
-}
-
-async function saveApiKey() {
-  state.apiKey = $("#apiKeyInput").value.trim();
-  if (state.apiKey) {
-    localStorage.setItem(STORAGE.apiKey, state.apiKey);
-    toast("API key saved in this browser.");
-  } else {
-    localStorage.removeItem(STORAGE.apiKey);
-    toast("API key removed.");
-  }
-  renderSearchStatus();
-  $("#apiDialog").close();
 }
 
 function applySettings() {
@@ -203,10 +183,20 @@ function applySettings() {
   document.body.classList.toggle("reduced-motion", state.settings.motion === "reduced");
   $("#bgUrlInput").value = state.settings.bgUrl || "";
   $("#glassRange").value = state.settings.glass || 20;
+  $("#profileNameInput") && ($("#profileNameInput").value = state.profileName || "");
   $$(".segmented button").forEach(btn => btn.classList.toggle("active", btn.dataset.motion === state.settings.motion));
 }
 
 function saveSettings() {
+  const profileInput = $("#profileNameInput");
+  if (profileInput) {
+    const name = profileInput.value.trim().replace(/\s+/g, " ");
+    if (name) {
+      state.profileName = name.slice(0, 24);
+      localStorage.setItem("b1api_profile_name", state.profileName);
+      renderLocalProfile();
+    }
+  }
   state.settings.bgUrl = $("#bgUrlInput").value.trim();
   state.settings.glass = Number($("#glassRange").value);
   state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
@@ -840,6 +830,29 @@ function escapeHTML(value) {
 }
 function escapeAttr(value) { return escapeHTML(value); }
 
+function renderLocalProfile() {
+  const name = state.profileName?.trim() || "LOCAL";
+  const avatar = name.charAt(0).toUpperCase() || "B";
+  $("#profileChipText") && ($("#profileChipText").textContent = name);
+  $("#profileAvatar") && ($("#profileAvatar").textContent = avatar);
+  $("#localProfileName") && ($("#localProfileName").textContent = name);
+}
+
+function saveLocalProfile() {
+  const input = $("#firstRunName");
+  const name = input?.value.trim().replace(/\s+/g, " ");
+  if (!name) {
+    toast("Choose a nickname first.");
+    input?.focus();
+    return;
+  }
+  state.profileName = name.slice(0, 24);
+  localStorage.setItem("b1api_profile_name", state.profileName);
+  renderLocalProfile();
+  closeFirstRun(true);
+  toast("Welcome to b1api.");
+}
+
 function updateApiStatusChip() {
   const chip = $("#apiStatus");
   const label = $("#heroApiLabel");
@@ -858,6 +871,7 @@ function openFirstRun() {
   el.classList.add("open");
   el.setAttribute("aria-hidden", "false");
   document.body.classList.add("first-run-open");
+  $("#firstRunName")?.focus();
 }
 
 function closeFirstRun(markSeen = true) {
@@ -952,7 +966,9 @@ function enhanceNavigation() {
   $("#continueFirstRun")?.addEventListener("click", () => { closeFirstRun(true); toast("You can connect YouTube later from API."); });
   $("#closeFirstRun")?.addEventListener("click", () => closeFirstRun(true));
   $("#mobileScrim")?.addEventListener("click", () => { $(".sidebar")?.classList.remove("open"); $("#mobileScrim")?.classList.remove("active"); });
+  $("#profileChip")?.addEventListener("click", () => $("#settingsDialog").showModal());
   updateRoute("home");
+  renderLocalProfile();
   updateApiStatusChip();
 }
 
@@ -969,7 +985,14 @@ function enhanceShortcuts() {
 }
 
 function enhanceFirstRun() {
-  if (!state.apiKey && localStorage.getItem("b1api_first_run_seen") !== "1") window.setTimeout(openFirstRun, 500);
+  if (!state.profileName) window.setTimeout(openFirstRun, 500);
+  $("#saveProfile")?.addEventListener("click", saveLocalProfile);
+  $("#firstRunName")?.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      saveLocalProfile();
+    }
+  });
 }
 
 function enhanceB1api() {
