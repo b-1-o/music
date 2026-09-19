@@ -31,8 +31,9 @@ let state = {
     accentColor: "#c8c8c8",
     surfaceColor: "#111111",
     backgroundColor: "#070707",
-    bgOpacity: 28,
-    bgBlur: 8
+    bgOpacity: 100,
+    bgBlur: 0,
+    bgColorEnabled: true
   }),
   current: null,
   queue: [],
@@ -83,8 +84,9 @@ function init() {
     accentColor: "#c8c8c8",
     surfaceColor: "#111111",
     backgroundColor: "#070707",
-    bgOpacity: 28,
-    bgBlur: 8,
+    bgOpacity: 100,
+    bgBlur: 0,
+    bgColorEnabled: true,
     ...state.settings
   };
   saveState();
@@ -283,8 +285,8 @@ function applySettings() {
   root.style.setProperty("--theme-accent", s.accentColor || "#c8c8c8");
   root.style.setProperty("--theme-surface", s.surfaceColor || "#111111");
   root.style.setProperty("--theme-background", s.backgroundColor || "#070707");
-  root.style.setProperty("--bg-image-opacity", String(Math.max(0, Math.min(60, Number(s.bgOpacity ?? 28))) / 100));
-  root.style.setProperty("--bg-image-blur", `${Math.max(0, Math.min(24, Number(s.bgBlur ?? 8)))}px`);
+  root.style.setProperty("--bg-image-opacity", "1");
+  root.style.setProperty("--bg-image-blur", "0px");
   root.style.setProperty("--blur", `${Math.min(24, Number(s.glass) || 0)}px`);
   document.body.classList.toggle("reduced-motion", s.motion === "reduced");
   document.body.classList.toggle("no-bg-color", s.bgColorEnabled === false);
@@ -434,8 +436,8 @@ function saveSettings() {
   state.settings.surfaceColor = value("surfaceColor") || "#111111";
   state.settings.backgroundColor = value("backgroundColor") || "#070707";
   state.settings.bgUrl = (value("bgUrlInput") || "").trim();
-  state.settings.bgOpacity = Number(value("bgOpacityRange") || 28);
-  state.settings.bgBlur = Number(value("bgBlurRange") || 8);
+  state.settings.bgOpacity = 100;
+  state.settings.bgBlur = 0;
   state.settings.bgColorEnabled = !!$("#bgColorEnabled")?.checked;
   state.settings.glass = Number(value("glassRange") || 16);
   state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
@@ -452,7 +454,7 @@ function saveSettings() {
 }
 
 function resetAppearance() {
-  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:28, bgBlur:8, bgColorEnabled:true };
+  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:100, bgBlur:0, bgColorEnabled:true };
   clearStoredBackground().catch(() => {});
   if (backgroundObjectUrl) { URL.revokeObjectURL(backgroundObjectUrl); backgroundObjectUrl = null; }
   saveState();
@@ -914,7 +916,6 @@ function setQueue(tracks, startIndex = 0) {
 function playTrack(track, remember = true) {
   state.current = track;
   updatePlayerUI();
-  setBackgroundFromTrack(track);
   if (remember) {
     state.recent = [track, ...state.recent.filter(x => x.id !== track.id)].slice(0, 50);
     saveState();
@@ -1096,12 +1097,6 @@ function updatePlayerUI() {
   $("#fullPlayerArtist") && ($("#fullPlayerArtist").textContent = track?.artist || "Choose a track to begin");
   $("#fullPlayerLike") && ($("#fullPlayerLike").classList.toggle("active", liked), $("#fullPlayerLike").textContent = liked ? "♥" : "♡");
   syncPlayerModes();
-}
-
-function setBackgroundFromTrack(track) {
-  if (!track?.thumbnail || state.settings.bgUrl) return;
-  $("#backgroundImage").style.backgroundImage = `url("${track.thumbnail}")`;
-  $("#backgroundImage").style.filter = "blur(12px) saturate(1.25)";
 }
 
 function toggleLiked(track) {
