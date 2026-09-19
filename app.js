@@ -155,7 +155,6 @@ function bindEvents() {
     $("#searchInput").value = value;
     searchYouTube(value);
   });
-  $("#settingsBtn").addEventListener("click", () => $("#settingsDialog").showModal());
   $("#newPlaylistBtn").addEventListener("click", () => $("#playlistDialog").showModal());
   $("#createPlaylist").addEventListener("click", createPlaylist);
   $("#playlistSettingsSave")?.addEventListener("click", savePlaylistSettings);
@@ -301,7 +300,6 @@ function bindEvents() {
   });
 
   $("#backFromPlaylist").addEventListener("click", () => showView("library"));
-  $("#mobileMenuBtn").addEventListener("click", () => toggleMobileSidebar());
   $(".overlay").addEventListener("click", () => closeMobileSidebar());
   $$("[data-close-dialog]").forEach(btn => btn.addEventListener("click", () => document.getElementById(btn.dataset.closeDialog).close()));
   $$("dialog").forEach(dialog => {
