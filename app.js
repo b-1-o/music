@@ -260,7 +260,7 @@ function renderPlaylists() {
   }));
 
   enhancePlaylistCarousel(host, buttons);
-  requestAnimationFrame(() => updatePlaylistCarousel(host, buttons));
+  requestAnimationFrame(() => { centerPlaylistCard(0, host, buttons); updatePlaylistCarousel(host, buttons); });
 }
 
 let carouselDrag = null;
@@ -312,10 +312,10 @@ function updatePlaylistCarousel(host, buttons) {
 }
 
 function enhancePlaylistCarousel(host, buttons) {
-  if (host.__b1apiEnhanced) return;
-  host.__b1apiEnhanced = true;
+  host.__b1apiCleanup?.();
 
   const onScroll = () => requestAnimationFrame(() => updatePlaylistCarousel(host, buttons));
+  const onResize = () => updatePlaylistCarousel(host, buttons);
   host.addEventListener("scroll", onScroll, { passive: true });
 
   host.addEventListener("wheel", (event) => {
@@ -354,7 +354,12 @@ function enhancePlaylistCarousel(host, buttons) {
     carouselDrag = null;
   });
 
-  window.addEventListener("resize", () => updatePlaylistCarousel(host, buttons));
+  window.addEventListener("resize", onResize);
+
+  host.__b1apiCleanup = () => {
+    host.removeEventListener("scroll", onScroll);
+    window.removeEventListener("resize", onResize);
+  };
 }
 
 function playlistArtwork(pl) {
