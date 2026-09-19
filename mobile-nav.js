@@ -9,14 +9,12 @@
   function openSidebar() {
     var sidebar = qs(".sidebar");
     var overlay = qs("#overlay") || qs(".overlay");
-    var btn = qs("#mobileMenuBtn");
     if (!sidebar) return;
     sidebar.classList.add("open");
     if (overlay) {
       overlay.classList.add("active");
       overlay.style.display = "block";
     }
-    if (btn) btn.setAttribute("aria-expanded", "true");
     document.body.classList.add("sidebar-open");
     document.body.style.overflow = "hidden";
   }
@@ -24,13 +22,11 @@
   function closeSidebar() {
     var sidebar = qs(".sidebar");
     var overlay = qs("#overlay") || qs(".overlay");
-    var btn = qs("#mobileMenuBtn");
     if (sidebar) sidebar.classList.remove("open");
     if (overlay) {
       overlay.classList.remove("active");
       overlay.style.display = "none";
     }
-    if (btn) btn.setAttribute("aria-expanded", "false");
     document.body.classList.remove("sidebar-open");
     document.body.style.overflow = "";
   }
@@ -98,22 +94,8 @@
   }
 
   function bindDrawer() {
-    var btn = qs("#mobileMenuBtn");
     var overlay = qs("#overlay") || qs(".overlay");
     var sidebar = qs(".sidebar");
-
-    if (btn && btn.dataset.mobileNavBound !== "1") {
-      var clone = btn.cloneNode(true);
-      btn.parentNode.replaceChild(clone, btn);
-      btn = clone;
-      btn.dataset.mobileNavBound = "1";
-      btn.type = "button";
-      btn.addEventListener("click", function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        toggleSidebar();
-      }, true);
-    }
 
     if (overlay && overlay.dataset.mobileNavBound !== "1") {
       overlay.dataset.mobileNavBound = "1";
@@ -129,13 +111,12 @@
       sidebar.addEventListener("click", function (e) {
         var nav = e.target.closest(".nav-item[data-view]");
         var pl = e.target.closest(".sidebar-playlist");
-        var settings = e.target.closest("#settingsBtn");
         if (nav) {
           setTimeout(function () {
             closeSidebar();
             syncTabs(nav.dataset.view);
           }, 20);
-        } else if (pl || settings) {
+        } else if (pl) {
           setTimeout(closeSidebar, 20);
         }
       }, false);
@@ -145,8 +126,6 @@
   function boot() {
     bindTabs();
     bindDrawer();
-    setTimeout(bindDrawer, 200);
-    setTimeout(bindDrawer, 800);
   }
 
   if (document.readyState === "loading") {
