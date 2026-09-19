@@ -839,7 +839,6 @@ function escapeHTML(value) {
 }
 function escapeAttr(value) { return escapeHTML(value); }
 
-i
 function updateApiStatusChip() {
   const chip = $("#apiStatus");
   const label = $("#heroApiLabel");
