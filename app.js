@@ -47,7 +47,8 @@ let state = {
   repeated: false,
   muted: false,
   yt: null,
-  ytReady: false
+  ytReady: false,
+  audio: null
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -58,8 +59,10 @@ let backgroundObjectUrl = null;
 let selectedBackgroundFile = null;
 const BG_DB_NAME = "b1api_assets";
 const PLAYLIST_COVER_PREFIX = "playlist-cover:";
+const LOCAL_AUDIO_PREFIX = "audio:";
 const playlistCoverObjectUrls = new Map();
 let editingPlaylistId = null;
+let localAudioObjectUrl = null;
 const BG_STORE = "files";
 
 function loadJSON(key, fallback) {
@@ -167,6 +170,7 @@ function bindEvents() {
     if (label) label.textContent = file.name;
   });
   $("#saveSettings").addEventListener("click", saveSettings);
+  $("#localAudioInput")?.addEventListener("change", importLocalAudio);
   $("#resetAppearance")?.addEventListener("click", resetAppearance);
   ["primaryColor","secondaryColor","accentColor","surfaceColor","backgroundColor"].forEach(id => {
     $("#"+id)?.addEventListener("input", e => {
@@ -236,6 +240,8 @@ function bindEvents() {
     toast(state.repeated ? "Repeat on." : "Repeat off.");
   });
   $("#likeCurrent").addEventListener("click", () => state.current && toggleLiked(state.current));
+  $("#addCurrentToPlaylist")?.addEventListener("click", () => state.current && openAddToPlaylist(state.current));
+  $("#fullPlayerAdd")?.addEventListener("click", () => state.current && openAddToPlaylist(state.current));
   $("#queueBtn").addEventListener("click", () => {
     renderQueue();
     $("#queueDialog").showModal();
@@ -443,6 +449,7 @@ function applySettings() {
   if ($("#playlistPanelOpacityValue")) $("#playlistPanelOpacityValue").textContent = `${s.playlistPanelOpacity ?? 96}%`;
   if ($("#playlistPanelBlurValue")) $("#playlistPanelBlurValue").textContent = `${s.playlistPanelBlur ?? 16}px`;
   if ($("#profileNameInput")) $("#profileNameInput").value = state.profileName || "";
+  refreshLocalAudioStatus();
   $$(".segmented button").forEach(btn => btn.classList.toggle("active", btn.dataset.motion === s.motion));
   updateThemeMeta();
 }
@@ -1075,12 +1082,164 @@ function setQueue(tracks, startIndex = 0) {
   renderQueue();
 }
 
+function ensureLocalAudio() {
+  if (state.audio) return state.audio;
+
+  const audio = new Audio();
+  audio.preload = "metadata";
+  audio.addEventListener("play", () => {
+    syncPlayerModes();
+    syncProgress();
+  });
+  audio.addEventListener("pause", () => {
+    syncPlayerModes();
+  });
+  audio.addEventListener("ended", () => {
+    if (state.repeated && state.current?.source === "local") {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    } else if (state.current?.source === "local") {
+      playRelative(1);
+    }
+  });
+  state.audio = audio;
+  return audio;
+}
+
+function localTrackTitle(file) {
+  return file.name.replace(/\.[^/.]+$/, "").trim() || "Local audio";
+}
+
+function getLocalAudioPlaylist() {
+  let playlist = state.playlists.find(pl => pl.id === "local-audio");
+  if (!playlist) {
+    playlist = { id: "local-audio", name: "Local Audio", tracks: [] };
+    state.playlists.push(playlist);
+  }
+  return playlist;
+}
+
+async function importLocalAudio(event) {
+  const files = [...(event.target.files || [])];
+  event.target.value = "";
+  if (!files.length) return;
+
+  const audioFiles = files.filter(file => file.type.startsWith("audio/"));
+  if (!audioFiles.length) {
+    toast("Choose an audio file.");
+    return;
+  }
+
+  const playlist = getLocalAudioPlaylist();
+  let imported = 0;
+  let lastTrack = null;
+
+  for (const file of audioFiles) {
+    if (file.size > 150 * 1024 * 1024) {
+      toast(file.name + " is larger than 150 MB.");
+      continue;
+    }
+
+    const id = "local-" + crypto.randomUUID();
+    const audioKey = LOCAL_AUDIO_PREFIX + id;
+    const track = {
+      id,
+      title: localTrackTitle(file),
+      artist: "Local file",
+      thumbnail: "",
+      source: "local",
+      audioKey,
+      publishedAt: "",
+      channelId: "",
+      url: ""
+    };
+
+    try {
+      await putAsset(audioKey, file);
+      playlist.tracks.push(track);
+      imported += 1;
+      lastTrack = track;
+    } catch {
+      toast("Couldn't save " + file.name + ".");
+    }
+  }
+
+  if (!imported) return;
+
+  saveState();
+  renderSidebar();
+  renderPlaylists();
+  refreshLocalAudioStatus();
+
+  if (lastTrack) {
+    setQueue([lastTrack], 0);
+    playTrack(lastTrack);
+  }
+
+  toast(imported === 1 ? "Local audio imported." : imported + " local tracks imported.");
+}
+
+function refreshLocalAudioStatus() {
+  const count = state.playlists.reduce(
+    (total, pl) => total + pl.tracks.filter(track => track.source === "local").length,
+    0
+  );
+  const el = $("#localAudioStatus");
+  if (el) {
+    el.textContent = count
+      ? count + (count === 1 ? " local track stored in this browser." : " local tracks stored in this browser.")
+      : "No local audio imported.";
+  }
+}
+
+async function playLocalTrack(track) {
+  if (!track?.audioKey) return;
+
+  try {
+    const blob = await getAsset(track.audioKey);
+    if (!blob) {
+      toast("The local audio file is missing.");
+      return;
+    }
+
+    if (localAudioObjectUrl) {
+      URL.revokeObjectURL(localAudioObjectUrl);
+      localAudioObjectUrl = null;
+    }
+
+    localAudioObjectUrl = URL.createObjectURL(blob);
+    const audio = ensureLocalAudio();
+    audio.src = localAudioObjectUrl;
+    audio.currentTime = 0;
+    audio.volume = Number($("#volumeBar")?.value ?? 70) / 100;
+    audio.muted = state.muted;
+    await audio.play();
+    syncPlayerModes();
+    syncProgress();
+  } catch {
+    toast("Couldn't play that local audio file.");
+  }
+}
+
 function playTrack(track, remember = true) {
+  if (!track) return;
+
   state.current = track;
   updatePlayerUI();
+
   if (remember) {
     state.recent = [track, ...state.recent.filter(x => x.id !== track.id)].slice(0, 50);
     saveState();
+  }
+
+  if (track.source === "local") {
+    if (state.yt?.stopVideo) state.yt.stopVideo();
+    playLocalTrack(track);
+    return;
+  }
+
+  if (state.audio && !state.audio.paused) {
+    state.audio.pause();
   }
 
   const player = ensureYouTubePlayer();
@@ -1114,6 +1273,10 @@ function playRelative(delta) {
 
 function stopPlayback() {
   if (state.yt?.stopVideo) state.yt.stopVideo();
+  if (state.audio) {
+    state.audio.pause();
+    state.audio.currentTime = 0;
+  }
   if (progressTimer) {
     clearInterval(progressTimer);
     progressTimer = 0;
@@ -1143,6 +1306,15 @@ function stopPlayback() {
 }
 
 function togglePlay() {
+  if (state.current?.source === "local") {
+    const audio = ensureLocalAudio();
+    if (audio.paused) audio.play().catch(() => {});
+    else audio.pause();
+    syncPlayerModes();
+    syncProgress();
+    return;
+  }
+
   if (!state.current) {
     if (state.queue[0]) playTrack(state.queue[0]);
     else toast("Search for a song first.");
@@ -1216,19 +1388,23 @@ function onYTStateChange(event) {
 }
 
 function syncProgress() {
-  if (!state.yt?.getCurrentTime) return;
+  const isLocal = state.current?.source === "local";
+
+  if (!isLocal && !state.yt?.getCurrentTime) return;
 
   const tick = () => {
-    if (!state.yt?.getCurrentTime) {
-      if (progressTimer) {
-        clearInterval(progressTimer);
-        progressTimer = 0;
-      }
-      return;
-    }
+    const playing = isLocal
+      ? !!state.audio && !state.audio.paused
+      : state.yt?.getPlayerState?.() === 1;
 
-    const duration = state.yt.getDuration?.() || 0;
-    const current = state.yt.getCurrentTime?.() || 0;
+    const duration = isLocal
+      ? (state.audio?.duration || 0)
+      : (state.yt?.getDuration?.() || 0);
+
+    const current = isLocal
+      ? (state.audio?.currentTime || 0)
+      : (state.yt?.getCurrentTime?.() || 0);
+
     const progress = duration ? (current / duration) * 100 : 0;
 
     const currentTime = $("#currentTime");
@@ -1245,14 +1421,15 @@ function syncProgress() {
     if (fullDuration) fullDuration.textContent = formatTime(duration);
     if (fullProgress) fullProgress.value = progress;
 
-    if (state.yt.getPlayerState?.() !== 1 && progressTimer) {
+    if (!playing && progressTimer) {
       clearInterval(progressTimer);
       progressTimer = 0;
     }
   };
 
   tick();
-  if (state.yt.getPlayerState?.() === 1 && !progressTimer) {
+  const playing = isLocal ? !!state.audio && !state.audio.paused : state.yt?.getPlayerState?.() === 1;
+  if (playing && !progressTimer) {
     progressTimer = window.setInterval(tick, 250);
   }
 }
@@ -1262,7 +1439,9 @@ function syncPlayerModes() {
   $("#repeatBtn")?.classList.toggle("active", state.repeated);
   $("#fullPlayerShuffle")?.classList.toggle("active", state.shuffled);
   $("#fullPlayerRepeat")?.classList.toggle("active", state.repeated);
-  const playing = state.yt?.getPlayerState?.() === 1;
+  const playing = state.current?.source === "local"
+    ? !!state.audio && !state.audio.paused
+    : state.yt?.getPlayerState?.() === 1;
   const label = playing ? "Ⅱ" : "▶";
   $("#playBtn") && ($("#playBtn").textContent = label);
   $("#fullPlayerPlay") && ($("#fullPlayerPlay").textContent = label);
