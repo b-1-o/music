@@ -251,6 +251,7 @@ function renderPlaylists() {
 
   const buttons = $(".playlist-card", host);
   buttons.forEach((btn, index) => btn.addEventListener("click", () => {
+    if (host.__b1apiSuppressClick) return;
     const centered = Math.abs(index - getNearestCarouselIndex(host, buttons)) < 0.5;
     if (!centered) {
       centerPlaylistCard(index, host, buttons);
@@ -350,6 +351,11 @@ function enhancePlaylistCarousel(host, buttons) {
     if (carouselDrag.moved) {
       const index = getNearestCarouselIndex(host, buttons);
       centerPlaylistCard(index, host, buttons);
+      host.__b1apiSuppressClick = true;
+      window.clearTimeout(host.__b1apiSuppressTimer);
+      host.__b1apiSuppressTimer = window.setTimeout(() => {
+        host.__b1apiSuppressClick = false;
+      }, 240);
     }
     carouselDrag = null;
   });
@@ -359,6 +365,7 @@ function enhancePlaylistCarousel(host, buttons) {
   host.__b1apiCleanup = () => {
     host.removeEventListener("scroll", onScroll);
     window.removeEventListener("resize", onResize);
+    window.clearTimeout(host.__b1apiSuppressTimer);
   };
 }
 
