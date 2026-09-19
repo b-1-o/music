@@ -815,8 +815,10 @@ function renderPlaylistPreview(host, pl, closePreview) {
 }
 
 function openPlaylistSettings(id){
-  if(!state.playlists.some(x=>x.id===id)) return;
+  const pl=state.playlists.find(x=>x.id===id);
+  if(!pl) return;
   editingPlaylistId=id;
+  if($("#playlistSettingsName")) $("#playlistSettingsName").value=pl.name || "";
   if($("#playlistSettingsCoverFile")) $("#playlistSettingsCoverFile").value="";
   if($("#playlistSettingsCoverName")) $("#playlistSettingsCoverName").textContent=playlistCoverObjectUrls.has(id)?"Custom cover is active.":"Using the first track cover.";
   $("#playlistSettingsDialog")?.showModal();
@@ -824,11 +826,25 @@ function openPlaylistSettings(id){
 
 async function savePlaylistSettings(){
   if(!editingPlaylistId) return;
+  const pl=state.playlists.find(x=>x.id===editingPlaylistId);
+  if(!pl) return;
+  const name=$("#playlistSettingsName")?.value.trim();
+  if(!name) return toast("Give the playlist a name.");
   const file=$("#playlistSettingsCoverFile")?.files?.[0];
+  const changedName=pl.name!==name;
+  pl.name=name.slice(0,40);
+  saveState();
   if(file) await setPlaylistCover(editingPlaylistId,file);
+  renderSidebar();
+  renderPlaylists();
+  const openPlaylistId=$("#playlistView")?.dataset.playlistId;
+  if(openPlaylistId===editingPlaylistId){
+    const openPl=state.playlists.find(x=>x.id===editingPlaylistId);
+    if(openPl) renderPlaylistPage(openPl);
+  }
   $("#playlistSettingsDialog")?.close();
   editingPlaylistId=null;
-  toast("Playlist settings saved.");
+  toast(changedName ? "Playlist renamed and saved." : "Playlist settings saved.");
 }
 
 async function removeEditingPlaylistCover(){
