@@ -1179,3 +1179,33 @@ body:has(#homeView.active){
     transform:translateX(calc(-100% - 10px))!important;
   }
 }
+
+
+/* === PERFORMANCE PASS === */
+
+/* Hidden YouTube preview should not spend frames painting its iframe/backdrop. */
+.youtube-host{
+  visibility:hidden!important;
+  content-visibility:hidden!important;
+  contain:strict!important;
+  pointer-events:none!important;
+}
+
+/* Limit expensive paint work to the carousel's own layer. */
+#homeView.active,
+#homeView.active .home-minimal,
+#homeView.active .carousel-frame,
+#homeView.active .playlist-carousel{
+  contain:layout paint!important;
+  isolation:isolate;
+}
+.playlist-carousel .playlist-card{
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+
+/* Long result lists only paint cards when they approach the viewport. */
+.search-results-clean .result-card{
+  content-visibility:auto;
+  contain-intrinsic-size:0 250px;
+}
