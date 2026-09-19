@@ -36,6 +36,8 @@ let state = {
     glass: 16,
     carouselOpacity: 100,
     carouselBlur: 0,
+    playlistPanelOpacity: 96,
+    playlistPanelBlur: 16,
     bgColorEnabled: true
   }),
   current: null,
@@ -92,6 +94,8 @@ function init() {
     glass: 16,
     carouselOpacity: 100,
     carouselBlur: 0,
+    playlistPanelOpacity: 96,
+    playlistPanelBlur: 16,
     bgColorEnabled: true,
     ...state.settings
   };
@@ -122,7 +126,23 @@ function bindEvents() {
   $("#scrollPlaylists")?.addEventListener("click", () => $("#playlistCarousel")?.scrollIntoView({behavior:"smooth", block:"center"}));
   $("#seeAllPlaylists")?.addEventListener("click", () => showView("library"));
   $("#searchInput").addEventListener("keydown", e => {
-    if (e.key === "Enter") searchYouTube(e.target.value.trim());
+    if (e.key === "Enter") {
+      $("#searchPanelInput") && ($("#searchPanelInput").value = e.target.value);
+      searchYouTube(e.target.value.trim());
+    }
+  });
+  $("#searchPanelInput")?.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const value = e.target.value.trim();
+      $("#searchInput").value = value;
+      searchYouTube(value);
+    }
+  });
+  $("#searchPanelButton")?.addEventListener("click", () => {
+    const value = $("#searchPanelInput")?.value.trim();
+    if (!value) return;
+    $("#searchInput").value = value;
+    searchYouTube(value);
   });
   $("#settingsBtn").addEventListener("click", () => $("#settingsDialog").showModal());
   $("#apiBtn").addEventListener("click", openApiDialog);
@@ -175,6 +195,18 @@ function bindEvents() {
     const value = Number(e.target.value);
     state.settings.carouselBlur = value;
     if ($("#carouselBlurValue")) $("#carouselBlurValue").textContent = value + "px";
+    applySettings();
+  });
+  $("#playlistPanelOpacityRange")?.addEventListener("input", e => {
+    const value = Number(e.target.value);
+    state.settings.playlistPanelOpacity = value;
+    if ($("#playlistPanelOpacityValue")) $("#playlistPanelOpacityValue").textContent = value + "%";
+    applySettings();
+  });
+  $("#playlistPanelBlurRange")?.addEventListener("input", e => {
+    const value = Number(e.target.value);
+    state.settings.playlistPanelBlur = value;
+    if ($("#playlistPanelBlurValue")) $("#playlistPanelBlurValue").textContent = value + "px";
     applySettings();
   });
   $("#bgBlurRange")?.addEventListener("input", e => {
@@ -257,7 +289,12 @@ function bindEvents() {
     $(".sidebar").classList.remove("open");
     $(".overlay").style.display = "none";
   });
-  $$("[data-close-dialog]").forEach(btn => btn.addEventListener("click", () => document.getElementById(btn.dataset.closeDialog).close()));
+  $("[data-close-dialog]").forEach(btn => btn.addEventListener("click", () => document.getElementById(btn.dataset.closeDialog).close()));
+  $("dialog").forEach(dialog => {
+    dialog.addEventListener("click", event => {
+      if (event.target === dialog) dialog.close();
+    });
+  });
   $$("[data-search]").forEach(card => card.addEventListener("click", () => {
     const q = card.dataset.search;
     $("#searchInput").value = q;
@@ -294,6 +331,8 @@ function showView(view) {
       searchInput.placeholder = "";
     } else if (view === "search") {
       searchInput.placeholder = "Search songs, artists, videos...";
+      const panelInput = $("#searchPanelInput");
+      if (panelInput) panelInput.value = searchInput.value;
     }
   }
   if (view === "search") renderSearchStatus();
@@ -326,6 +365,8 @@ function applySettings() {
   root.style.setProperty("--carousel-opacity", String(carouselOpacity / 100));
   root.style.setProperty("--carousel-fill-pct", `${Math.max(10, Math.round(carouselOpacity * 0.72))}%`);
   root.style.setProperty("--carousel-blur", `${Math.max(0, Math.min(18, Number(s.carouselBlur ?? 0)))}px`);
+  root.style.setProperty("--playlist-panel-opacity", String(Math.max(45, Math.min(100, Number(s.playlistPanelOpacity ?? 96))) / 100));
+  root.style.setProperty("--playlist-panel-blur", `${Math.max(0, Math.min(28, Number(s.playlistPanelBlur ?? 16)))}px`);
   document.body.classList.toggle("reduced-motion", s.motion === "reduced");
   document.body.classList.toggle("no-bg-color", s.bgColorEnabled === false);
   if ($("#bgColorEnabled")) $("#bgColorEnabled").checked = s.bgColorEnabled !== false;
@@ -346,6 +387,8 @@ function applySettings() {
   setValue("bgBlurRange", s.bgBlur ?? 0);
   setValue("carouselOpacityRange", s.carouselOpacity ?? 100);
   setValue("carouselBlurRange", s.carouselBlur ?? 0);
+  setValue("playlistPanelOpacityRange", s.playlistPanelOpacity ?? 96);
+  setValue("playlistPanelBlurRange", s.playlistPanelBlur ?? 16);
   setValue("primaryColor", s.primaryColor || "#e7e7e7");
   setValue("secondaryColor", s.secondaryColor || "#8f8f8f");
   setValue("accentColor", s.accentColor || "#c8c8c8");
@@ -355,6 +398,8 @@ function applySettings() {
   if ($("#bgBlurValue")) $("#bgBlurValue").textContent = `${s.bgBlur ?? 0}px`;
   if ($("#carouselOpacityValue")) $("#carouselOpacityValue").textContent = `${s.carouselOpacity ?? 100}%`;
   if ($("#carouselBlurValue")) $("#carouselBlurValue").textContent = `${s.carouselBlur ?? 0}px`;
+  if ($("#playlistPanelOpacityValue")) $("#playlistPanelOpacityValue").textContent = `${s.playlistPanelOpacity ?? 96}%`;
+  if ($("#playlistPanelBlurValue")) $("#playlistPanelBlurValue").textContent = `${s.playlistPanelBlur ?? 16}px`;
   if ($("#profileNameInput")) $("#profileNameInput").value = state.profileName || "";
   $$(".segmented button").forEach(btn => btn.classList.toggle("active", btn.dataset.motion === s.motion));
   updateThemeMeta();
@@ -483,6 +528,8 @@ function saveSettings() {
   state.settings.bgBlur = Number(value("bgBlurRange") ?? 0);
   state.settings.carouselOpacity = Number(value("carouselOpacityRange") ?? 100);
   state.settings.carouselBlur = Number(value("carouselBlurRange") ?? 0);
+  state.settings.playlistPanelOpacity = Number(value("playlistPanelOpacityRange") ?? 96);
+  state.settings.playlistPanelBlur = Number(value("playlistPanelBlurRange") ?? 16);
   state.settings.bgColorEnabled = !!$("#bgColorEnabled")?.checked;
   state.settings.glass = Number(value("glassRange") || 16);
   state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
@@ -499,7 +546,7 @@ function saveSettings() {
 }
 
 function resetAppearance() {
-  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, carouselOpacity:100, carouselBlur:0, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:100, bgBlur:0, bgColorEnabled:true };
+  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, carouselOpacity:100, carouselBlur:0, playlistPanelOpacity:96, playlistPanelBlur:16, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:100, bgBlur:0, bgColorEnabled:true };
   clearStoredBackground().catch(() => {});
   if (backgroundObjectUrl) { URL.revokeObjectURL(backgroundObjectUrl); backgroundObjectUrl = null; }
   saveState();
@@ -739,6 +786,12 @@ function renderPlaylistPreview(host, pl, closePreview) {
       </div>
     </div>`;
   host.appendChild(panel);
+  host.addEventListener("click", function onOpenOutside(event){
+    if (event.target === host) {
+      closePreview();
+      host.removeEventListener("click", onOpenOutside);
+    }
+  }, { once:false });
   panel.addEventListener("click", event => {
     event.stopPropagation();
     if(event.target.closest(".playlist-open-close")) return closePreview();
