@@ -296,11 +296,15 @@
       <section class="appearance-section appearance-section-wide playback-section">
         <div class="appearance-section-head"><span>06</span><div><b>PLAYBACK</b><small>YouTube or your own local audio</small></div></div>
         <div class="setting-block">
-          <label>Ad-free alternative</label>
+          <label>Playback source</label>
+          <div class="segmented playback-mode">
+            <button type="button" data-playback="youtube" class="active">YouTube</button>
+            <button type="button" data-playback="local">Local audio</button>
+          </div>
           <div class="playback-choice">
             <div class="playback-choice-main">
               <strong>Local audio files</strong>
-              <span>Import audio you already own and keep it in this browser.</span>
+              <span>Own files play locally, without YouTube playback or YouTube ads.</span>
             </div>
             <label class="file-button" for="localAudioInput">Import audio</label>
             <input id="localAudioInput" type="file" accept="audio/*" multiple hidden />
