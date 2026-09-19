@@ -23,8 +23,16 @@ let state = {
   recent: loadJSON(STORAGE.recent, []),
   settings: loadJSON(STORAGE.settings, {
     bgUrl: "",
-    glass: 20,
-    motion: "full"
+    bgMode: "",
+    glass: 16,
+    motion: "full",
+    primaryColor: "#e7e7e7",
+    secondaryColor: "#8f8f8f",
+    accentColor: "#c8c8c8",
+    surfaceColor: "#111111",
+    backgroundColor: "#070707",
+    bgOpacity: 28,
+    bgBlur: 8
   }),
   current: null,
   queue: [],
@@ -62,6 +70,21 @@ function saveState() {
 }
 
 function init() {
+  state.settings = {
+    bgUrl: "",
+    bgMode: "",
+    glass: 16,
+    motion: "full",
+    primaryColor: "#e7e7e7",
+    secondaryColor: "#8f8f8f",
+    accentColor: "#c8c8c8",
+    surfaceColor: "#111111",
+    backgroundColor: "#070707",
+    bgOpacity: 28,
+    bgBlur: 8,
+    ...state.settings
+  };
+  saveState();
   applySettings();
   renderSidebar();
   renderPlaylists();
@@ -78,12 +101,12 @@ function init() {
 
 function bindEvents() {
   $$(".nav-item[data-view]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
-  $("#startSearching").addEventListener("click", () => {
+  $("#startSearching")?.addEventListener("click", () => {
     showView("search");
-    $("#searchInput").focus();
+    $("#searchInput")?.focus();
   });
-  $("#scrollPlaylists").addEventListener("click", () => $("#playlistCarousel").scrollIntoView({behavior:"smooth", block:"center"}));
-  $("#seeAllPlaylists").addEventListener("click", () => showView("library"));
+  $("#scrollPlaylists")?.addEventListener("click", () => $("#playlistCarousel")?.scrollIntoView({behavior:"smooth", block:"center"}));
+  $("#seeAllPlaylists")?.addEventListener("click", () => showView("library"));
   $("#searchInput").addEventListener("keydown", e => {
     if (e.key === "Enter") searchYouTube(e.target.value.trim());
   });
@@ -93,6 +116,23 @@ function bindEvents() {
   $("#newPlaylistBtn").addEventListener("click", () => $("#playlistDialog").showModal());
   $("#createPlaylist").addEventListener("click", createPlaylist);
   $("#saveSettings").addEventListener("click", saveSettings);
+  $("#resetAppearance")?.addEventListener("click", resetAppearance);
+  ["primaryColor","secondaryColor","accentColor","surfaceColor","backgroundColor"].forEach(id => {
+    $("#"+id)?.addEventListener("input", e => {
+      state.settings[id] = e.target.value;
+      applySettings();
+    });
+  });
+  $("#bgOpacityRange")?.addEventListener("input", e => {
+    if ($("#bgOpacityValue")) $("#bgOpacityValue").textContent = e.target.value + "%";
+    state.settings.bgOpacity = Number(e.target.value);
+    applySettings();
+  });
+  $("#bgBlurRange")?.addEventListener("input", e => {
+    if ($("#bgBlurValue")) $("#bgBlurValue").textContent = e.target.value + "px";
+    state.settings.bgBlur = Number(e.target.value);
+    applySettings();
+  });
   $("#bgFileInput")?.addEventListener("change", handleBackgroundFile);
   $("#clearBgFile")?.addEventListener("click", clearBackgroundFile);
   $("#playBtn").addEventListener("click", togglePlay);
@@ -213,26 +253,47 @@ function openApiDialog() {
 }
 
 function applySettings() {
-  const bg = state.settings.bgUrl?.trim();
+  const s = state.settings;
+  const root = document.documentElement;
   const bgEl = $("#backgroundImage");
-  bgEl.style.backgroundImage = bg
-    ? `url("${safeUrl(bg)}")`
-    : "radial-gradient(circle at 70% 20%, rgba(121,104,255,.14), transparent 32%), radial-gradient(circle at 15% 80%, rgba(0,190,255,.08), transparent 28%), #08080a";
-  document.documentElement.style.setProperty("--blur", `${Math.min(24, Number(state.settings.glass) || 18)}px`);
-  document.body.classList.toggle("reduced-motion", state.settings.motion === "reduced");
-  $("#bgUrlInput").value = state.settings.bgUrl || "";
-  $("#glassRange").value = state.settings.glass || 18;
-  $("#profileNameInput") && ($("#profileNameInput").value = state.profileName || "");
-  $$(".segmented button").forEach(btn => btn.classList.toggle("active", btn.dataset.motion === state.settings.motion));
+  root.style.setProperty("--theme-primary", s.primaryColor || "#e7e7e7");
+  root.style.setProperty("--theme-secondary", s.secondaryColor || "#8f8f8f");
+  root.style.setProperty("--theme-accent", s.accentColor || "#c8c8c8");
+  root.style.setProperty("--theme-surface", s.surfaceColor || "#111111");
+  root.style.setProperty("--theme-background", s.backgroundColor || "#070707");
+  root.style.setProperty("--bg-image-opacity", String(Math.max(0, Math.min(60, Number(s.bgOpacity ?? 28))) / 100));
+  root.style.setProperty("--bg-image-blur", `${Math.max(0, Math.min(24, Number(s.bgBlur ?? 8)))}px`);
+  root.style.setProperty("--blur", `${Math.min(24, Number(s.glass) || 0)}px`);
+  document.body.classList.toggle("reduced-motion", s.motion === "reduced");
+  if (bgEl) bgEl.style.backgroundImage = s.bgUrl?.trim() ? `url("${safeUrl(s.bgUrl)}")` : "none";
+  const setValue = (id, value) => { const el = $("#" + id); if (el) el.value = value; };
+  setValue("bgUrlInput", s.bgUrl || "");
+  setValue("glassRange", s.glass ?? 16);
+  setValue("bgOpacityRange", s.bgOpacity ?? 28);
+  setValue("bgBlurRange", s.bgBlur ?? 8);
+  setValue("primaryColor", s.primaryColor || "#e7e7e7");
+  setValue("secondaryColor", s.secondaryColor || "#8f8f8f");
+  setValue("accentColor", s.accentColor || "#c8c8c8");
+  setValue("surfaceColor", s.surfaceColor || "#111111");
+  setValue("backgroundColor", s.backgroundColor || "#070707");
+  if ($("#bgOpacityValue")) $("#bgOpacityValue").textContent = `${s.bgOpacity ?? 28}%`;
+  if ($("#bgBlurValue")) $("#bgBlurValue").textContent = `${s.bgBlur ?? 8}px`;
+  if ($("#profileNameInput")) $("#profileNameInput").value = state.profileName || "";
+  $$(".segmented button").forEach(btn => btn.classList.toggle("active", btn.dataset.motion === s.motion));
+  updateThemeMeta();
 }
-
+function updateThemeMeta() {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", state.settings.backgroundColor || "#070707");
+}
 async function loadSavedBackground() {
   try {
     const blob = await getAsset("background");
-    if (!blob) return;
+    if (!blob || state.settings.bgMode !== "file" || state.settings.bgUrl) return;
     if (backgroundObjectUrl) URL.revokeObjectURL(backgroundObjectUrl);
     backgroundObjectUrl = URL.createObjectURL(blob);
     $("#backgroundImage").style.backgroundImage = `url("${backgroundObjectUrl}")`;
+    if ($("#bgFileName")) $("#bgFileName").textContent = "Saved local image";
   } catch {}
 }
 
@@ -309,10 +370,12 @@ async function clearBackgroundFile() {
     backgroundObjectUrl = null;
   }
   state.settings.bgMode = "";
+  state.settings.bgUrl = "";
   saveState();
   applySettings();
+  if ($("#bgFileInput")) $("#bgFileInput").value = "";
   const label = $("#bgFileName");
-  if (label) label.textContent = "No file selected";
+  if (label) label.textContent = "No local image selected";
   toast("Custom background cleared.");
 }
 
@@ -320,30 +383,41 @@ function saveSettings() {
   const profileInput = $("#profileNameInput");
   if (profileInput) {
     const name = profileInput.value.trim().replace(/\s+/g, " ");
-    if (name) {
-      state.profileName = name.slice(0, 24);
-      localStorage.setItem("b1api_profile_name", state.profileName);
-      renderLocalProfile();
-    }
+    if (name) { state.profileName = name.slice(0, 24); localStorage.setItem("b1api_profile_name", state.profileName); renderLocalProfile(); }
   }
-  state.settings.bgUrl = $("#bgUrlInput").value.trim();
-  state.settings.glass = Number($("#glassRange").value);
+  const value = id => $("#" + id)?.value;
+  state.settings.primaryColor = value("primaryColor") || "#e7e7e7";
+  state.settings.secondaryColor = value("secondaryColor") || "#8f8f8f";
+  state.settings.accentColor = value("accentColor") || "#c8c8c8";
+  state.settings.surfaceColor = value("surfaceColor") || "#111111";
+  state.settings.backgroundColor = value("backgroundColor") || "#070707";
+  state.settings.bgUrl = (value("bgUrlInput") || "").trim();
+  state.settings.bgOpacity = Number(value("bgOpacityRange") || 28);
+  state.settings.bgBlur = Number(value("bgBlurRange") || 8);
+  state.settings.glass = Number(value("glassRange") || 16);
+  state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
   if (state.settings.bgUrl) {
     state.settings.bgMode = "url";
     clearStoredBackground().catch(() => {});
-    if (backgroundObjectUrl) {
-      URL.revokeObjectURL(backgroundObjectUrl);
-      backgroundObjectUrl = null;
-    }
+    if (backgroundObjectUrl) { URL.revokeObjectURL(backgroundObjectUrl); backgroundObjectUrl = null; }
   }
-  state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
   saveState();
   applySettings();
   if (state.settings.bgMode === "file" && !state.settings.bgUrl) loadSavedBackground();
-  $("#settingsDialog").close();
-  toast("Appearance saved.");
+  $("#settingsDialog")?.close();
+  toast("Settings saved.");
 }
 
+function resetAppearance() {
+  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:28, bgBlur:8 };
+  clearStoredBackground().catch(() => {});
+  if (backgroundObjectUrl) { URL.revokeObjectURL(backgroundObjectUrl); backgroundObjectUrl = null; }
+  saveState();
+  applySettings();
+  if ($("#bgFileInput")) $("#bgFileInput").value = "";
+  if ($("#bgFileName")) $("#bgFileName").textContent = "No local image selected";
+  toast("Appearance reset.");
+}
 function renderSidebar() {
   const host = $("#sidebarPlaylists");
   host.innerHTML = state.playlists.map(pl => `
