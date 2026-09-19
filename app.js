@@ -290,14 +290,8 @@ function bindEvents() {
   });
 
   $("#backFromPlaylist").addEventListener("click", () => showView("library"));
-  $("#mobileMenuBtn").addEventListener("click", () => {
-    $(".sidebar").classList.toggle("open");
-    $(".overlay").style.display = "block";
-  });
-  $(".overlay").addEventListener("click", () => {
-    $(".sidebar").classList.remove("open");
-    $(".overlay").style.display = "none";
-  });
+  $("#mobileMenuBtn").addEventListener("click", () => toggleMobileSidebar());
+  $(".overlay").addEventListener("click", () => closeMobileSidebar());
   $$("[data-close-dialog]").forEach(btn => btn.addEventListener("click", () => document.getElementById(btn.dataset.closeDialog).close()));
   $$("dialog").forEach(dialog => {
     dialog.addEventListener("click", event => {
@@ -331,6 +325,32 @@ function resetSearchView() {
   $("#searchView")?.classList.remove("search-has-results");
 }
 
+function openMobileSidebar() {
+  const sidebar = $(".sidebar");
+  const overlay = $(".overlay");
+  const button = $("#mobileMenuBtn");
+  if (!sidebar) return;
+  sidebar.classList.add("open");
+  overlay?.classList.add("active");
+  if (overlay) overlay.style.display = "block";
+  button?.setAttribute("aria-expanded", "true");
+}
+
+function closeMobileSidebar() {
+  const sidebar = $(".sidebar");
+  const overlay = $(".overlay");
+  const button = $("#mobileMenuBtn");
+  sidebar?.classList.remove("open");
+  overlay?.classList.remove("active");
+  if (overlay) overlay.style.display = "none";
+  button?.setAttribute("aria-expanded", "false");
+}
+
+function toggleMobileSidebar() {
+  if ($(".sidebar")?.classList.contains("open")) closeMobileSidebar();
+  else openMobileSidebar();
+}
+
 function showView(view) {
   const views = {
     home: "#homeView",
@@ -341,8 +361,7 @@ function showView(view) {
   $$(".view").forEach(x => x.classList.remove("active"));
   $(views[view]).classList.add("active");
   $$(".nav-item[data-view]").forEach(x => x.classList.toggle("active", x.dataset.view === view));
-  $(".sidebar").classList.remove("open");
-  $(".overlay").style.display = "none";
+  closeMobileSidebar();
   const searchInput = $("#searchInput");
   if (searchInput) {
     if (view === "home") {
