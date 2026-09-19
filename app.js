@@ -337,7 +337,10 @@ function showView(view) {
     }
   }
   if (view === "search") {
-    $("#searchView")?.classList.remove("search-has-results");
+    const searchView = $("#searchView");
+    searchView?.classList.remove("search-has-results");
+    const searchResults = $("#searchResults");
+    if (searchResults) searchResults.innerHTML = "";
     renderSearchStatus();
   }
   if (view === "library") renderLibrary("liked");
