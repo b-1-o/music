@@ -1732,3 +1732,54 @@ body:has(#homeView.active){
   .transport .control-button{width:22px!important;height:22px!important;min-width:22px!important}
   .transport .play-button{width:25px!important;height:25px!important;min-width:25px!important}
 }
+
+
+/* === ADD-TO-PLAYLIST DIALOG === */
+.add-playlist-dialog{
+  width:min(430px,calc(100vw - 28px));
+  max-height:min(70vh,620px);
+}
+.add-playlist-dialog .modal-head{
+  margin-bottom:10px;
+}
+.add-playlist-dialog [style*="display:grid"]{
+  max-height:48vh;
+  overflow:auto;
+  padding-right:2px;
+}
+.add-playlist-dialog .add-track-option{
+  width:100%;
+  min-height:52px;
+  grid-template-columns:36px minmax(0,1fr);
+  padding:7px;
+  font-size:10px;
+  border:1px solid transparent;
+}
+.add-playlist-dialog .add-track-option:hover{
+  border-color:var(--line);
+  background:rgba(255,255,255,.045);
+}
+.add-playlist-dialog .add-track-option img,
+.add-playlist-dialog .add-track-option .fallback-art{
+  width:36px;height:36px;border-radius:9px
+}
+
+@media(max-width:620px){
+  .add-playlist-dialog{
+    width:calc(100vw - 20px)!important;
+    max-width:none!important;
+    margin:auto!important;
+    border-radius:20px!important;
+    padding:13px!important;
+  }
+  .add-playlist-dialog .add-track-option{
+    min-height:58px!important;
+    grid-template-columns:42px minmax(0,1fr)!important;
+    padding:8px!important;
+    border-radius:12px!important;
+  }
+  .add-playlist-dialog .add-track-option img,
+  .add-playlist-dialog .add-track-option .fallback-art{
+    width:42px!important;height:42px!important;border-radius:10px!important;
+  }
+}
