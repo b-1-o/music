@@ -53,7 +53,7 @@
           <button class="round-button" id="backgroundBtn" aria-label="Change background">✦</button>
           <button class="round-button" id="queueBtnTop" aria-label="Open queue">☷</button>
           <button class="round-button" id="apiBtn" aria-label="Configure YouTube API">API</button>
-          <button class="profile-chip" id="profileChip" aria-label="Local profile"><span class="profile-avatar">B</span><span>LOCAL</span></button>
+          <button class="profile-chip" id="profileChip" aria-label="Local profile"><span class="profile-avatar" id="profileAvatar">B</span><span id="profileChipText">LOCAL</span></button>
         </div>
       </header>
 
@@ -186,30 +186,25 @@
   <div class="overlay" id="overlay"></div>
 
   <div class="first-run" id="firstRun" aria-hidden="true">
-    <div class="first-run-card glass">
+    <div class="first-run-card glass profile-onboarding-card">
       <button class="icon-button first-run-close" id="closeFirstRun" aria-label="Close setup">×</button>
       <div class="brand first-run-brand">b1api<span>/</span></div>
-      <div class="eyebrow">FIRST RUN / YOUTUBE SETUP</div>
-      <h2>Make the search <em>live.</em></h2>
-      <p class="first-run-copy">b1api uses YouTube's public-data API for search. Your key is saved only in this browser, not on this site.</p>
-      <div class="first-run-steps">
-        <div><span>01</span><b>Open Google Cloud</b><small>Enable YouTube Data API v3.</small></div>
-        <div><span>02</span><b>Create an API key</b><small>Restrict it to this site and YouTube Data API v3.</small></div>
-        <div><span>03</span><b>Paste it here</b><small>Search becomes available immediately.</small></div>
+      <div class="eyebrow">FIRST RUN / LOCAL PROFILE</div>
+      <h2>Welcome to <em>b1api.</em></h2>
+      <p class="first-run-copy">Choose a nickname for this browser. It is only used to label your local library — there is no account and nothing is uploaded.</p>
+
+      <div class="profile-name-wrap">
+        <label for="firstRunName">Your nickname</label>
+        <input id="firstRunName" class="text-input" maxlength="24" autocomplete="nickname" placeholder="e.g. b1o" />
+        <small>Playlists, likes and history remain local to this browser.</small>
       </div>
+
       <div class="first-run-actions">
-        <a class="primary-button magnetic" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Get API key ↗</a>
-        <button class="ghost-button" id="showFirstRunKey">I already have one</button>
+        <button class="primary-button magnetic" id="saveProfile"><span>Enter b1api</span><i>↗</i></button>
       </div>
-      <div class="first-run-key" id="firstRunKey">
-        <label>YouTube Data API v3 key</label>
-        <div class="first-run-key-row"><input id="firstRunApiKey" class="text-input" type="password" placeholder="AIza…"><button class="primary-button" id="saveFirstRunKey">Connect</button></div>
-        <small>Recommended referrer: <code>https://b-1-o.github.io</code></small>
-      </div>
-      <button class="text-button" id="continueFirstRun">Continue without search →</button>
+      <button class="text-button first-run-later" id="changeProfileLater">You can change it later in Settings →</button>
     </div>
   </div>
-
   <dialog id="settingsDialog" class="modal glass">
     <div class="modal-head">
       <div>
@@ -248,25 +243,17 @@
     <div class="modal-head">
       <div>
         <span class="eyebrow">YOUTUBE DATA API</span>
-        <h3>Connect search.</h3>
+        <h3>Connected <em>globally.</em></h3>
       </div>
       <button class="icon-button" data-close-dialog="apiDialog">×</button>
     </div>
-
-    <p class="modal-copy">This app keeps the key in this browser only. For a public deployment, restrict the key to your site origin in Google Cloud.</p>
-    <div class="setting-block">
-      <label>YouTube Data API v3 key</label>
-      <input id="apiKeyInput" class="text-input" type="password" placeholder="Paste API key" />
-    </div>
-
+    <p class="modal-copy">b1api uses the site's configured YouTube Data API key. Visitors do not need to create or enter a key.</p>
     <div class="api-help">
-      <strong>Setup</strong>
-      <span>Create a Google Cloud project → enable YouTube Data API v3 → create an API key → restrict it to your GitHub Pages domain.</span>
+      <strong>For visitors</strong>
+      <span>Just choose a nickname. Your playlists, likes and listening history stay in this browser.</span>
     </div>
-
     <div class="modal-actions">
-      <button class="danger-button" id="clearApi">Clear key</button>
-      <button class="primary-button" id="saveApi">Save key</button>
+      <button class="primary-button" data-close-dialog="apiDialog">Done</button>
     </div>
   </dialog>
 
@@ -305,6 +292,7 @@
     <div id="yt-player"></div>
   </div>
 
+  <script src="./config.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="./app.js"></script>
 </body>
