@@ -877,7 +877,7 @@ function openFirstRun() {
 function closeFirstRun(markSeen = true) {
   const el = $("#firstRun");
   if (!el) return;
-  if (markSeen) localStorage.setItem("b1api_first_run_seen", "1");
+  if (markSeen && state.profileName) localStorage.setItem("b1api_first_run_seen", "1");
   el.classList.remove("open");
   el.setAttribute("aria-hidden", "true");
   document.body.classList.remove("first-run-open");
@@ -950,23 +950,8 @@ function enhanceNavigation() {
     centerPlaylistCard(Math.min(cards.length - 1, getNearestCarouselIndex(host, cards) + 1), host, cards);
   });
 
-  $("#showFirstRunKey")?.addEventListener("click", () => {
-    $("#firstRunKey")?.classList.toggle("open");
-    $("#firstRunApiKey")?.focus();
-  });
-  $("#saveFirstRunKey")?.addEventListener("click", () => {
-    const key = $("#firstRunApiKey")?.value.trim();
-    if (!key) return toast("Paste your YouTube API key first.");
-    state.apiKey = key;
-    localStorage.setItem(STORAGE.apiKey, key);
-    renderSearchStatus();
-    closeFirstRun(true);
-    toast("YouTube search connected.");
-  });
-  $("#continueFirstRun")?.addEventListener("click", () => { closeFirstRun(true); toast("You can connect YouTube later from API."); });
   $("#closeFirstRun")?.addEventListener("click", () => closeFirstRun(true));
   $("#mobileScrim")?.addEventListener("click", () => { $(".sidebar")?.classList.remove("open"); $("#mobileScrim")?.classList.remove("active"); });
-  $("#profileChip")?.addEventListener("click", () => $("#settingsDialog").showModal());
   updateRoute("home");
   renderLocalProfile();
   updateApiStatusChip();
