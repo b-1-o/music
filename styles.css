@@ -61,9 +61,9 @@ button:focus-visible,input:focus-visible{outline:1px solid var(--pink);outline-o
 .back-button{margin:140px 0 0 7vw;color:#858792;font:500 8px "DM Mono"}.playlist-page-hero{display:grid;grid-template-columns:270px 1fr;gap:24px;margin:22px 7vw 18px;padding:12px;border-radius:22px}.playlist-page-art{width:270px;aspect-ratio:1;display:grid;place-items:center;overflow:hidden;border-radius:17px;background:#111}.playlist-page-art img{width:100%;height:100%;object-fit:cover}.playlist-page-copy{align-self:end;padding:12px}.playlist-page-copy h2{margin:14px 0 7px;font-size:clamp(46px,6vw,86px);line-height:.84;letter-spacing:-.08em}.playlist-page-copy p{color:#858792;font-size:10px}.playlist-controls{display:flex;gap:7px;margin-top:18px}
 
 .player{position:fixed;left:calc(var(--sidebar) + 16px);right:16px;bottom:16px;z-index:65;min-height:96px;padding:9px;border-radius:18px;display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(250px,1.5fr) auto;gap:12px;align-items:center}
-.full-player{position:fixed;inset:0;z-index:170;display:none;overflow:hidden;background:#050508;color:#fff}
+.full-player{position:fixed;inset:0;z-index:20000;display:flex;visibility:hidden;opacity:0;pointer-events:none;overflow:hidden;background:#050508;color:#fff;transform:translateY(18px) scale(.985);transform-origin:center;transition:opacity .32s ease,transform .4s cubic-bezier(.16,1,.3,1),visibility 0s linear .4s}
 body.player-expanded{overflow:hidden}
-body.player-expanded .full-player{display:flex;flex-direction:column}
+body.player-expanded .full-player{visibility:visible;opacity:1;pointer-events:auto;transform:none;transition:opacity .28s ease,transform .42s cubic-bezier(.16,1,.3,1),visibility 0s}
 body.player-expanded .player{opacity:0;pointer-events:none;transform:translateY(18px)}
 .full-player-bg{position:absolute;inset:-8%;background-position:center;background-size:cover;background-repeat:no-repeat;filter:blur(30px) saturate(1.18);transform:scale(1.12);opacity:.58;will-change:transform}
 .full-player-shade{position:absolute;inset:0;background:
@@ -1924,4 +1924,78 @@ body:has(#homeView.active){
   .playlist-carousel .playlist-card{
     transform-style:flat!important;
   }
+}
+
+
+/* === MOBILE CAROUSEL / FULL PLAYER CLEAN MODE === */
+@media(max-width:620px){
+  .playlist-carousel.mobile-single{
+    touch-action:pan-y;
+    perspective:none!important;
+    overflow:hidden!important;
+    overscroll-behavior-x:contain;
+  }
+  .playlist-carousel.mobile-single .playlist-stage-track{
+    transform:none!important;
+    perspective:none!important;
+  }
+  .playlist-carousel.mobile-single .playlist-card{
+    transition:transform .26s cubic-bezier(.16,1,.3,1),opacity .2s ease!important;
+    transform-style:flat!important;
+    box-shadow:0 30px 80px rgba(0,0,0,.48)!important;
+    will-change:transform,opacity;
+  }
+  .playlist-carousel.mobile-single .playlist-card:not(.is-center){
+    visibility:hidden!important;
+  }
+  .playlist-carousel.mobile-single.is-mobile-switching .playlist-card.is-center{
+    animation:mobileCarouselArrive .3s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes mobileCarouselArrive{
+    from{opacity:0;transform:translate3d(0,8px,0) scale(.97)}
+    to{opacity:1;transform:translate3d(0,0,0) scale(1)}
+  }
+
+  /* Fullscreen player owns the whole phone viewport. */
+  body.player-expanded .topbar,
+  body.player-expanded .player,
+  body.player-expanded .mobile-tab-bar,
+  body.player-expanded .sidebar,
+  body.player-expanded .overlay,
+  body.player-expanded #overlay{
+    display:none!important;
+  }
+  body.player-expanded .full-player{
+    inset:0!important;
+    width:100vw!important;
+    height:100dvh!important;
+    border-radius:0!important;
+  }
+  .full-player-top{
+    padding:calc(12px + env(safe-area-inset-top,0px)) 14px 10px!important;
+  }
+  .full-player-icon{
+    width:46px!important;
+    height:46px!important;
+    font-size:22px!important;
+    background:rgba(7,8,12,.46)!important;
+    border-color:rgba(255,255,255,.16)!important;
+  }
+  .full-player-center{
+    padding:8px 14px 14px!important;
+  }
+  .full-player-art-wrap{
+    width:min(82vw,420px)!important;
+    box-shadow:0 34px 100px rgba(0,0,0,.55)!important;
+  }
+  .full-player-copy h2{
+    max-width:94vw!important;
+  }
+  .full-player-bottom{
+    margin-bottom:calc(10px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
+@media(max-width:390px){
+  .full-player-art-wrap{width:min(84vw,360px)!important}
+  .full-player-copy h2{font-size:clamp(24px,7.8vw,34px)!important}
 }
