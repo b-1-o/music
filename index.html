@@ -75,20 +75,7 @@
       </section>
 
       <section id="searchView" class="view">
-        <div class="page-head">
-          <div>
-            <span class="eyebrow">SEARCH</span>
-            <h2>Find something.</h2>
-          </div>
-          <div class="search-status" id="searchStatus">Connect a YouTube API key to search.</div>
-        </div>
-        <div id="searchResults" class="results-grid">
-          <div class="empty-state glass">
-            <div class="empty-icon">⌕</div>
-            <h3>Your results will land here.</h3>
-            <p>The YouTube connection is already configured by the site owner. Search from the bar above.</p>
-          </div>
-        </div>
+        <div id="searchResults" class="results-grid search-results-clean"></div>
       </section>
 
       <section id="libraryView" class="view">
@@ -261,15 +248,23 @@
     </div>
     <div class="setting-block">
       <label>Image opacity <span id="bgOpacityValue">100%</span></label>
-      <input id="bgOpacityRange" type="range" min="100" max="100" value="100" disabled />
+      <input id="bgOpacityRange" type="range" min="0" max="100" value="100" />
     </div>
     <div class="setting-block">
       <label>Image blur <span id="bgBlurValue">0px</span></label>
-      <input id="bgBlurRange" type="range" min="0" max="0" value="0" disabled />
+      <input id="bgBlurRange" type="range" min="0" max="24" value="0" />
     </div>
     <div class="setting-block">
       <label>Glass intensity <span id="glassValue">16px</span></label>
       <input id="glassRange" type="range" min="0" max="35" value="16" />
+    </div>
+    <div class="setting-block">
+      <label>Playlist opacity <span id="carouselOpacityValue">100%</span></label>
+      <input id="carouselOpacityRange" type="range" min="20" max="100" value="100" />
+    </div>
+    <div class="setting-block">
+      <label>Playlist blur <span id="carouselBlurValue">0px</span></label>
+      <input id="carouselBlurRange" type="range" min="0" max="18" value="0" />
     </div>
     <div class="setting-block">
       <label>Motion</label>
