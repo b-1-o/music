@@ -152,8 +152,6 @@ function bindEvents() {
     searchYouTube(value);
   });
   $("#settingsBtn").addEventListener("click", () => $("#settingsDialog").showModal());
-  $("#apiBtn").addEventListener("click", openApiDialog);
-  $("#backgroundBtn").addEventListener("click", () => $("#settingsDialog").showModal());
   $("#newPlaylistBtn").addEventListener("click", () => $("#playlistDialog").showModal());
   $("#createPlaylist").addEventListener("click", createPlaylist);
   $("#playlistSettingsSave")?.addEventListener("click", savePlaylistSettings);
@@ -1660,7 +1658,6 @@ function enhanceNavigation() {
 
   $("#homeTopBtn")?.addEventListener("click", () => showView("home"));
   $("#profileChip")?.addEventListener("click", () => $("#settingsDialog").showModal());
-  $("#apiStatus")?.addEventListener("click", openApiDialog);
   $("#queueBtnTop")?.addEventListener("click", () => { renderQueue(); $("#queueDialog").showModal(); });
 
   // Playlist stage owns its own controls.
