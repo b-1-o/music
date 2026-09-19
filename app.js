@@ -542,13 +542,14 @@ function setupYouTube() {
     state.yt = new YT.Player("yt-player", {
       width: "480",
       height: "270",
+      host: "https://www.youtube-nocookie.com",
       playerVars: {
         playsinline: 1,
         controls: 1,
         rel: 0,
-        modestbranding: 1,
         origin: window.location.origin,
-        enablejsapi: 1
+        enablejsapi: 1,
+        widget_referrer: window.location.href
       },
       events: {
         onReady: () => {
