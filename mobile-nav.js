@@ -4,6 +4,7 @@
   function qsa(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
 
   var lastToggleAt = 0;
+  var tabsBound = false;
 
   function openSidebar() {
     var sidebar = qs(".sidebar");
@@ -68,18 +69,21 @@
     try { window.scrollTo(0, 0); } catch (e) {}
   }
 
-  function ensureBottomTabs() {
-    if (qs("#mobileTabBar")) return;
-    var bar = document.createElement("nav");
-    bar.id = "mobileTabBar";
-    bar.className = "mobile-tab-bar";
-    bar.innerHTML =
-      '<button type="button" class="mobile-tab active" data-view="home"><span>⌂</span><b>Home</b></button>' +
-      '<button type="button" class="mobile-tab" data-view="search"><span>⌕</span><b>Search</b></button>' +
-      '<button type="button" class="mobile-tab" data-view="library"><span>▣</span><b>Library</b></button>' +
-      '<button type="button" class="mobile-tab" data-view="menu"><span>☰</span><b>Menu</b></button>';
-    document.body.appendChild(bar);
-
+  function bindTabs() {
+    var bar = qs("#mobileTabBar");
+    if (!bar) {
+      bar = document.createElement("nav");
+      bar.id = "mobileTabBar";
+      bar.className = "mobile-tab-bar";
+      bar.innerHTML =
+        '<button type="button" class="mobile-tab active" data-view="home"><span>⌂</span><b>Home</b></button>' +
+        '<button type="button" class="mobile-tab" data-view="search"><span>⌕</span><b>Search</b></button>' +
+        '<button type="button" class="mobile-tab" data-view="library"><span>▣</span><b>Library</b></button>' +
+        '<button type="button" class="mobile-tab" data-view="menu"><span>☰</span><b>Menu</b></button>';
+      document.body.appendChild(bar);
+    }
+    if (tabsBound) return;
+    tabsBound = true;
     bar.addEventListener("click", function (e) {
       var tab = e.target.closest(".mobile-tab");
       if (!tab) return;
@@ -127,10 +131,9 @@
         var pl = e.target.closest(".sidebar-playlist");
         var settings = e.target.closest("#settingsBtn");
         if (nav) {
-          var view = nav.dataset.view;
           setTimeout(function () {
             closeSidebar();
-            syncTabs(view);
+            syncTabs(nav.dataset.view);
           }, 20);
         } else if (pl || settings) {
           setTimeout(closeSidebar, 20);
@@ -140,10 +143,10 @@
   }
 
   function boot() {
-    ensureBottomTabs();
+    bindTabs();
     bindDrawer();
-    setTimeout(bindDrawer, 150);
-    setTimeout(bindDrawer, 600);
+    setTimeout(bindDrawer, 200);
+    setTimeout(bindDrawer, 800);
   }
 
   if (document.readyState === "loading") {
@@ -151,5 +154,5 @@
   } else {
     boot();
   }
-  window.addEventListener("load", function () { setTimeout(boot, 80); });
+  window.addEventListener("load", function () { setTimeout(boot, 50); });
 })();
