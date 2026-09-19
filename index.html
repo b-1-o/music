@@ -124,7 +124,7 @@
           <div class="empty-state glass">
             <div class="empty-icon">⌕</div>
             <h3>Your results will land here.</h3>
-            <p>Press API to add a YouTube Data API key, then search from the bar above.</p>
+            <p>The YouTube connection is already configured by the site owner. Search from the bar above.</p>
           </div>
         </div>
       </section>
@@ -186,6 +186,50 @@
       <button class="expand-button" id="expandPlayer">⤢</button>
     </div>
   </div>
+
+  <section class="full-player" id="fullPlayer" aria-hidden="true">
+    <div class="full-player-bg" id="fullPlayerBg"></div>
+    <div class="full-player-shade"></div>
+
+    <header class="full-player-top">
+      <button class="full-player-icon" id="fullPlayerClose" aria-label="Close full player">×</button>
+      <div class="full-player-label">
+        <span>NOW PLAYING</span>
+        <strong>b1api / player</strong>
+      </div>
+      <button class="full-player-icon" id="fullPlayerQueue" aria-label="Open queue">☷</button>
+    </header>
+
+    <div class="full-player-center">
+      <div class="full-player-art-wrap">
+        <img id="fullPlayerArt" class="full-player-art" src="" alt="">
+      </div>
+      <div class="full-player-copy">
+        <span class="eyebrow" id="fullPlayerEyebrow">YOUTUBE MUSIC VIDEO</span>
+        <h2 id="fullPlayerTitle">Nothing playing</h2>
+        <p id="fullPlayerArtist">Choose a track to begin</p>
+      </div>
+    </div>
+
+    <div class="full-player-bottom">
+      <div class="full-player-meta">
+        <button class="full-player-like" id="fullPlayerLike" aria-label="Like current track">♡</button>
+        <div class="full-player-time"><span id="fullPlayerCurrentTime">0:00</span><span id="fullPlayerDuration">0:00</span></div>
+      </div>
+
+      <div class="full-player-progress">
+        <input id="fullPlayerProgress" type="range" min="0" max="100" value="0" aria-label="Playback progress">
+      </div>
+
+      <div class="full-player-transport">
+        <button id="fullPlayerShuffle" class="full-player-control" aria-label="Shuffle">⤨</button>
+        <button id="fullPlayerPrev" class="full-player-control" aria-label="Previous">◀</button>
+        <button id="fullPlayerPlay" class="full-player-play" aria-label="Play">▶</button>
+        <button id="fullPlayerNext" class="full-player-control" aria-label="Next">▶</button>
+        <button id="fullPlayerRepeat" class="full-player-control" aria-label="Repeat">↻</button>
+      </div>
+    </div>
+  </section>
 
   <div class="overlay" id="overlay"></div>
 
