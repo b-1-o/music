@@ -521,15 +521,6 @@ function renderPlaylists() {
   function render() {
     const width = host.clientWidth;
     const total = buttons.length;
-    const cardWidth = Math.round(Math.min(286, Math.max(220, width * 0.34)));
-    const cardHeight = Math.round(cardWidth * 1.405);
-    const step = Math.max(118, Math.min(330, (width - cardWidth) / 2 - 8));
-    buttons.forEach(button => {
-      button.style.width = cardWidth + "px";
-      button.style.height = cardHeight + "px";
-      button.style.margin = (-cardHeight / 2) + "px 0 0 " + (-cardWidth / 2) + "px";
-    });
-
     phase += (target - phase) * 0.14;
     if (Math.abs(target - phase) < 0.0005) phase = target;
 
@@ -543,7 +534,7 @@ function renderPlaylists() {
       const rotateY = slot * -9;
       const opacity = Math.max(0.08, 1 - Math.max(0, abs - 2.1) * 0.48);
 
-      button.style.transform = `translate3d(calc(-50% + ${x}px),calc(-50% + ${y}px),0) rotateZ(${rotate}deg) rotateY(${rotateY}deg) scale(${scale})`;
+      button.style.transform = "translate3d(" + x + "px," + y + "px,0) rotateZ(" + rotate + "deg) rotateY(" + rotateY + "deg) scale(" + scale + ")";
       button.style.opacity = String(opacity);
       button.style.zIndex = String(100 - Math.round(abs * 12));
       button.classList.toggle("is-center", abs < 0.5);
@@ -624,10 +615,7 @@ function renderPlaylists() {
     if (Math.abs(dx) > 8) drag.moved = true;
     if (drag.moved) {
       event.preventDefault();
-      const width = host.clientWidth;
-      const cardWidth = Math.round(Math.min(286, Math.max(220, width * 0.34)));
-      const step = Math.max(118, Math.min(330, (width - cardWidth) / 2 - 8));
-      target = drag.startTarget - dx / step;
+      target = drag.startTarget - dx / 245;
       requestRender();
     }
   };
