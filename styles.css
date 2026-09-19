@@ -1783,3 +1783,11 @@ body:has(#homeView.active){
     width:42px!important;height:42px!important;border-radius:10px!important;
   }
 }
+
+
+/* On phones the bottom player exists only when a track is selected/playing. */
+@media(max-width:620px){
+  #playerBar:not(.has-track){
+    display:none!important;
+  }
+}
