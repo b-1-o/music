@@ -1,18 +1,25 @@
-# FOG Music
+# b1api
 
-A glassmorphism music web app that searches YouTube through the official YouTube Data API and plays videos with the official YouTube IFrame Player.
+An immersive, local-first music web app inspired by the visual language of the owner's `forest` and `fog` projects.
 
-## What is included
+## Visual direction
 
-- Search YouTube videos from the browser
-- Local playlists with no account or database
+- Cinematic full-screen atmosphere and editorial typography
+- Frosted glass surfaces with restrained motion
+- 3D playlist visual index inspired by the `fog` carousel
+- Center-focused cards with mouse/touch drag, wheel navigation and click-to-open
+- Album artwork can drive the background
+
+## Features
+
+- YouTube Data API v3 search
+- Official YouTube IFrame Player
+- Local playlists with no b1api account
 - Liked songs
 - Recently played
-- Queue, shuffle, repeat and volume
-- Playlist carousel
-- Dynamic album-art background
-- Custom background image
-- Glass blur controls
+- Queue, shuffle and repeat
+- Custom background URL
+- Local glass blur setting
 - GitHub Pages friendly static build
 
 ## Setup
@@ -20,20 +27,22 @@ A glassmorphism music web app that searches YouTube through the official YouTube
 1. Create a Google Cloud project.
 2. Enable **YouTube Data API v3**.
 3. Create an API key.
-4. Open the site and press **API**.
-5. Paste the key. It is stored only in the current browser using localStorage.
-6. For a public deployment, restrict the API key to the site's HTTP referrer(s) in Google Cloud.
+4. Open b1api and press **API**.
+5. Paste the key. It is stored only in the current browser with localStorage.
+6. For a public deployment, restrict the key to your GitHub Pages HTTP referrer.
 
-The app does not download or host audio files. Playback is handled by the official YouTube IFrame Player.
+The app does not download or host audio files. Playback uses the official YouTube IFrame Player.
 
 ## GitHub Pages
 
-Enable **Settings → Pages → Deploy from a branch** and choose the branch containing these files (usually `main`) and `/ (root)`.
+This project is plain HTML/CSS/JavaScript, so it can be served directly from the repository root.
+
+Enable **Settings → Pages → Deploy from a branch → main → / (root)**.
 
 ## Local data
 
-Playlists, likes, recent history, appearance settings and the API key are stored locally in the browser. Clearing site data or using another browser/device will not transfer them.
+Playlists, likes, recent history, appearance settings and the API key stay in the current browser. Clearing site data or changing device/browser will not transfer the library.
 
 ## Important
 
-The YouTube player and YouTube API are subject to Google's current terms and API quota policies. This project intentionally uses the official player rather than extracting or downloading YouTube audio.
+YouTube's player and API are subject to Google's current terms and quota policies. This project uses the official player rather than extracting or downloading YouTube audio.
