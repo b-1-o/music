@@ -576,3 +576,95 @@ input[type="range"][disabled]{opacity:.7;cursor:not-allowed}
   display:none!important;
   background:none!important;
 }
+
+
+/* === CLEAN SEARCH + MOTION SYSTEM === */
+.view.active{
+  animation:viewReveal .42s var(--ease) both;
+}
+@keyframes viewReveal{
+  from{opacity:0;transform:translateY(14px) scale(.994)}
+  to{opacity:1;transform:none}
+}
+.search-results-clean{
+  min-height:calc(100vh - var(--player) - 90px);
+  padding:128px 5vw 70px!important;
+}
+.search-results-clean:empty{display:block}
+.search-status{display:none!important}
+.search-loading{
+  min-height:220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.search-loading span{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--theme-accent);
+  animation:searchDot 1s ease-in-out infinite;
+}
+.search-loading span:nth-child(2){animation-delay:.12s}
+.search-loading span:nth-child(3){animation-delay:.24s}
+@keyframes searchDot{
+  0%,100%{transform:translateY(0);opacity:.25}
+  50%{transform:translateY(-7px);opacity:1}
+}
+.result-card{
+  opacity:0;
+  transform:translateY(24px) scale(.985);
+  animation:resultReveal .52s var(--ease) forwards;
+  animation-delay:calc(var(--item-index,0) * 35ms);
+}
+@keyframes resultReveal{
+  to{opacity:1;transform:none}
+}
+.dialog{
+  opacity:0;
+  transform:translateY(14px) scale(.97);
+}
+dialog[open]{
+  animation:dialogReveal .34s var(--ease) both;
+}
+dialog::backdrop{
+  background:rgba(0,0,0,.58);
+  backdrop-filter:blur(7px);
+  animation:backdropReveal .32s ease both;
+}
+@keyframes dialogReveal{
+  from{opacity:0;transform:translateY(16px) scale(.965)}
+  to{opacity:1;transform:none}
+}
+@keyframes backdropReveal{
+  from{opacity:0}
+  to{opacity:1}
+}
+.playlist-carousel .playlist-card{
+  opacity:var(--carousel-opacity,1)!important;
+  filter:blur(var(--carousel-blur,0px))!important;
+  transition:transform .22s var(--ease),opacity .28s ease,filter .28s ease,border-color .28s ease,box-shadow .28s ease!important;
+}
+.playlist-carousel .playlist-card.is-center{
+  filter:blur(0)!important;
+  opacity:1!important;
+}
+.playlist-carousel .playlist-art img{
+  opacity:1!important;
+}
+.background-image{
+  opacity:var(--bg-image-opacity)!important;
+  filter:blur(var(--bg-image-blur))!important;
+  transform:scale(1.04)!important;
+}
+.background-image::after{display:none!important}
+body::before,body::after{display:none!important}
+@media(max-width:850px){
+  .search-results-clean{padding:110px 24px 70px!important}
+}
+@media(max-width:620px){
+  .search-results-clean{padding:96px 14px 70px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .view.active,.result-card,dialog[open],dialog::backdrop{animation:none!important}
+  .search-loading span{animation:none!important}
+}
