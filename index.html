@@ -42,6 +42,7 @@
     <main class="main">
       <header class="topbar glass">
         <button class="mobile-menu" id="mobileMenuBtn">☰</button>
+        <button class="home-top-button" id="homeTopBtn" data-view="home" aria-label="Home"><span>⌂</span><b>HOME</b></button>
         <div class="top-search" id="topSearch">
           <span>⌕</span>
           <input id="searchInput" type="search" autocomplete="off" placeholder="Search songs, artists, videos..." />
@@ -180,6 +181,31 @@
   </div>
 
   <div class="overlay" id="overlay"></div>
+
+  <div class="first-run" id="firstRun" aria-hidden="true">
+    <div class="first-run-card glass">
+      <button class="icon-button first-run-close" id="closeFirstRun" aria-label="Close setup">×</button>
+      <div class="brand first-run-brand">b1api<span>/</span></div>
+      <div class="eyebrow">FIRST RUN / YOUTUBE SETUP</div>
+      <h2>Make the search <em>live.</em></h2>
+      <p class="first-run-copy">b1api uses YouTube's public-data API for search. Your key is saved only in this browser, not on this site.</p>
+      <div class="first-run-steps">
+        <div><span>01</span><b>Open Google Cloud</b><small>Enable YouTube Data API v3.</small></div>
+        <div><span>02</span><b>Create an API key</b><small>Restrict it to this site and YouTube Data API v3.</small></div>
+        <div><span>03</span><b>Paste it here</b><small>Search becomes available immediately.</small></div>
+      </div>
+      <div class="first-run-actions">
+        <a class="primary-button magnetic" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Get API key ↗</a>
+        <button class="ghost-button" id="showFirstRunKey">I already have one</button>
+      </div>
+      <div class="first-run-key" id="firstRunKey">
+        <label>YouTube Data API v3 key</label>
+        <div class="first-run-key-row"><input id="firstRunApiKey" class="text-input" type="password" placeholder="AIza…"><button class="primary-button" id="saveFirstRunKey">Connect</button></div>
+        <small>Recommended referrer: <code>https://b-1-o.github.io</code></small>
+      </div>
+      <button class="text-button" id="continueFirstRun">Continue without search →</button>
+    </div>
+  </div>
 
   <dialog id="settingsDialog" class="modal glass">
     <div class="modal-head">
