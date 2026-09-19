@@ -668,3 +668,15 @@ body::before,body::after{display:none!important}
   .view.active,.result-card,dialog[open],dialog::backdrop{animation:none!important}
   .search-loading span{animation:none!important}
 }
+
+
+/* Carousel glass surface follows the appearance controls */
+.playlist-carousel .playlist-card{
+  background:color-mix(in srgb,var(--theme-surface) var(--carousel-fill-pct,72%),transparent)!important;
+  -webkit-backdrop-filter:blur(var(--glass-blur,16px)) saturate(115%)!important;
+  backdrop-filter:blur(var(--glass-blur,16px)) saturate(115%)!important;
+}
+.playlist-carousel .playlist-card.is-center{
+  opacity:var(--carousel-opacity,1)!important;
+  filter:blur(var(--carousel-blur,0px))!important;
+}
