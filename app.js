@@ -100,6 +100,7 @@ function init() {
     playlistPanelOpacity: 96,
     playlistPanelBlur: 16,
     bgColorEnabled: true,
+    playbackMode: "youtube",
     ...state.settings
   };
   saveState();
@@ -169,6 +170,12 @@ function bindEvents() {
     const label = $("#playlistCoverFileName");
     if (label) label.textContent = file.name;
   });
+  $(".playback-mode button").forEach(btn => btn.addEventListener("click", () => {
+    state.settings.playbackMode = btn.dataset.playback || "youtube";
+    $(".playback-mode button").forEach(x => x.classList.toggle("active", x === btn));
+    saveState();
+    refreshLocalAudioStatus();
+  }));
   $("#saveSettings").addEventListener("click", saveSettings);
   $("#localAudioInput")?.addEventListener("change", importLocalAudio);
   $("#resetAppearance")?.addEventListener("click", resetAppearance);
@@ -450,7 +457,10 @@ function applySettings() {
   if ($("#playlistPanelBlurValue")) $("#playlistPanelBlurValue").textContent = `${s.playlistPanelBlur ?? 16}px`;
   if ($("#profileNameInput")) $("#profileNameInput").value = state.profileName || "";
   refreshLocalAudioStatus();
-  $$(".segmented button").forEach(btn => btn.classList.toggle("active", btn.dataset.motion === s.motion));
+  $(".segmented button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.motion === s.motion);
+    if (btn.dataset.playback) btn.classList.toggle("active", btn.dataset.playback === (s.playbackMode || "youtube"));
+  });
   updateThemeMeta();
 }
 function updateThemeMeta() {
@@ -581,7 +591,8 @@ function saveSettings() {
   state.settings.playlistPanelBlur = Number(value("playlistPanelBlurRange") ?? 16);
   state.settings.bgColorEnabled = !!$("#bgColorEnabled")?.checked;
   state.settings.glass = Number(value("glassRange") || 16);
-  state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
+  state.settings.motion = $(".segmented button[data-motion].active")?.dataset.motion || "full";
+  state.settings.playbackMode = $(".playback-mode button.active")?.dataset.playback || state.settings.playbackMode || "youtube";
   if (state.settings.bgUrl) {
     state.settings.bgMode = "url";
     clearStoredBackground().catch(() => {});
@@ -1223,6 +1234,11 @@ async function playLocalTrack(track) {
 
 function playTrack(track, remember = true) {
   if (!track) return;
+
+  if (state.settings.playbackMode === "local" && track.source !== "local") {
+    toast("Local audio mode is active. Import an audio file to play it.");
+    return;
+  }
 
   state.current = track;
   updatePlayerUI();
