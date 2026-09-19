@@ -1,5 +1,5 @@
 
-const TYPES = ["javascript","popups","notifications","camera","microphone","geolocation","cookies","images","sound"];
+const TYPES = ["javascript","popups","notifications","camera","microphone","location","cookies","images","sound"];
 const STORE = "siteRules";
 
 function patternFor(url) {
