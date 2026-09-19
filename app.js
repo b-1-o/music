@@ -1484,6 +1484,10 @@ function updatePlayerUI() {
   $("#nowArtist").textContent = track?.artist || "Choose a track to begin";
   $("#likeCurrent").classList.toggle("active", liked);
   $("#likeCurrent").textContent = liked ? "♥" : "♡";
+  ["#addCurrentToPlaylist", "#fullPlayerAdd"].forEach(selector => {
+    const button = $(selector);
+    if (button) button.disabled = !track;
+  });
   $("#nowArt").innerHTML = track?.thumbnail
     ? `<img src="${safeUrl(track.thumbnail)}" alt="">`
     : "<span>♪</span>";
@@ -1521,7 +1525,7 @@ function openAddToPlaylist(track) {
     </button>`
   ).join("");
   const dialog = document.createElement("dialog");
-  dialog.className = "modal glass";
+  dialog.className = "modal glass add-playlist-dialog";
   dialog.innerHTML = `
     <div class="modal-head">
       <div><span class="eyebrow">ADD TRACK</span><h3>Choose a playlist.</h3></div>
