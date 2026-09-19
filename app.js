@@ -414,11 +414,11 @@ function togglePlay() {
 function setupYouTube() {
   window.onYouTubeIframeAPIReady = () => {
     state.yt = new YT.Player("yt-player", {
-      width: "1",
-      height: "1",
+      width: "480",
+      height: "270",
       playerVars: {
         playsinline: 1,
-        controls: 0,
+        controls: 1,
         rel: 0,
         modestbranding: 1
       },
