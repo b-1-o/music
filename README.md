@@ -46,3 +46,16 @@ Playlists, likes, recent history, appearance settings and the API key stay in th
 ## Important
 
 YouTube's player and API are subject to Google's current terms and quota policies. This project uses the official player rather than extracting or downloading YouTube audio.
+
+
+## Deployment
+
+The site uses one YouTube Data API v3 key configured by the repository owner. Visitors only choose a local nickname; playlists, likes, history and appearance settings stay in their browser.
+
+For GitHub Pages deployment:
+
+1. Add a repository secret named `YOUTUBE_API_KEY`.
+2. Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
+3. Push to `main`. The workflow in `.github/workflows/pages.yml` generates `config.js` during the Pages build and deploys the site.
+
+The key is not committed to the source repository. It is still delivered to the browser at runtime, so it should be restricted in Google Cloud to the site's HTTP referrer and only **YouTube Data API v3**.
