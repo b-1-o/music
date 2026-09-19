@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./styles.css" />
-  <link rel="stylesheet" href="./mobile-fix.css?v=4" />
+  <link rel="stylesheet" href="./mobile-fix.css?v=5" />
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -393,9 +393,16 @@
 
   <div id="toast" class="toast glass"></div>
 
+  <nav id="mobileTabBar" class="mobile-tab-bar" aria-label="Main">
+    <button type="button" class="mobile-tab active" data-view="home"><span>⌂</span><b>Home</b></button>
+    <button type="button" class="mobile-tab" data-view="search"><span>⌕</span><b>Search</b></button>
+    <button type="button" class="mobile-tab" data-view="library"><span>▣</span><b>Library</b></button>
+    <button type="button" class="mobile-tab" data-view="menu"><span>☰</span><b>Menu</b></button>
+  </nav>
+
   <script src="./config.js"></script>
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="./app.js"></script>
-  <script src="./mobile-nav.js?v=4"></script>
+  <script src="./mobile-nav.js?v=5"></script>
 </body>
 </html>
