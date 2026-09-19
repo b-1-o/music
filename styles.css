@@ -1526,3 +1526,47 @@ body:has(#homeView.active){
     min-height:22px!important;
   }
 }
+
+
+/* === MOBILE DRAWER + NO INPUT ZOOM === */
+@media(max-width:850px){
+  .sidebar{
+    z-index:120!important;
+    pointer-events:none!important;
+    visibility:hidden!important;
+    transform:translate3d(-112%,0,0)!important;
+  }
+  .sidebar.open{
+    z-index:120!important;
+    pointer-events:auto!important;
+    visibility:visible!important;
+    transform:translate3d(0,0,0)!important;
+  }
+  .mobile-menu{
+    position:relative!important;
+    z-index:130!important;
+    touch-action:manipulation!important;
+  }
+  .overlay{
+    z-index:110!important;
+    touch-action:manipulation!important;
+  }
+  .overlay.active{
+    display:block!important;
+  }
+  .top-search input,
+  #searchInput,
+  #searchPanelInput{
+    font-size:16px!important;
+    line-height:1.2!important;
+    -webkit-text-size-adjust:100%!important;
+  }
+}
+@media(max-width:620px){
+  .top-search input,
+  #searchInput,
+  #searchPanelInput{
+    font-size:16px!important;
+    transform:none!important;
+  }
+}
