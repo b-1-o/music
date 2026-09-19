@@ -265,7 +265,15 @@ function applySettings() {
   root.style.setProperty("--bg-image-blur", `${Math.max(0, Math.min(24, Number(s.bgBlur ?? 8)))}px`);
   root.style.setProperty("--blur", `${Math.min(24, Number(s.glass) || 0)}px`);
   document.body.classList.toggle("reduced-motion", s.motion === "reduced");
-  if (bgEl) bgEl.style.backgroundImage = s.bgUrl?.trim() ? `url("${safeUrl(s.bgUrl)}")` : "none";
+  if (bgEl) {
+    if (s.bgUrl?.trim()) {
+      bgEl.style.backgroundImage = `url("${safeUrl(s.bgUrl)}")`;
+    } else if (s.bgMode === "file" && backgroundObjectUrl) {
+      bgEl.style.backgroundImage = `url("${backgroundObjectUrl}")`;
+    } else {
+      bgEl.style.backgroundImage = "none";
+    }
+  }
   const setValue = (id, value) => { const el = $("#" + id); if (el) el.value = value; };
   setValue("bgUrlInput", s.bgUrl || "");
   setValue("glassRange", s.glass ?? 16);
