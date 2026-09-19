@@ -75,6 +75,14 @@
       </section>
 
       <section id="searchView" class="view">
+        <div class="search-panel">
+          <span class="eyebrow">SEARCH / YOUTUBE</span>
+          <div class="search-panel-shell">
+            <span>⌕</span>
+            <input id="searchPanelInput" type="search" autocomplete="off" placeholder="Search songs, artists, videos..." />
+            <button id="searchPanelButton" type="button" aria-label="Search">↗</button>
+          </div>
+        </div>
         <div id="searchResults" class="results-grid search-results-clean"></div>
       </section>
 
@@ -202,75 +210,108 @@
       <button class="text-button first-run-later" id="changeProfileLater">You can change it later in Settings →</button>
     </div>
   </div>
-  <dialog id="settingsDialog" class="modal glass">
-    <div class="modal-head">
+  <dialog id="settingsDialog" class="modal glass appearance-modal">
+    <div class="modal-head appearance-head">
       <div><span class="eyebrow">SETTINGS</span><h3>Appearance</h3></div>
-      <button class="icon-button" data-close-dialog="settingsDialog">×</button>
+      <button class="icon-button" data-close-dialog="settingsDialog" aria-label="Close">×</button>
     </div>
-    <div class="setting-block">
-      <label>Local nickname</label>
-      <input id="profileNameInput" class="text-input" maxlength="24" autocomplete="nickname" placeholder="Your nickname" />
-      <small>Stored only in this browser.</small>
-    </div>
-    <div class="setting-block">
-      <label>Theme colors</label>
-      <div class="color-grid">
-        <label class="color-field"><span>Primary</span><input id="primaryColor" type="color" value="#e7e7e7" /></label>
-        <label class="color-field"><span>Secondary</span><input id="secondaryColor" type="color" value="#8f8f8f" /></label>
-        <label class="color-field"><span>Accent</span><input id="accentColor" type="color" value="#c8c8c8" /></label>
-        <label class="color-field"><span>Surface</span><input id="surfaceColor" type="color" value="#111111" /></label>
-        <label class="color-field"><span>Background</span><input id="backgroundColor" type="color" value="#070707" /></label>
-      </div>
-      <small>Grayscale is the default. Every color can be changed locally.</small>
-    </div>
-    <div class="setting-block">
-      <div class="setting-inline">
-        <label class="switch-field">
-          <input id="bgColorEnabled" type="checkbox" checked />
-          <span class="switch-ui"></span>
-          <span>Use background color</span>
-        </label>
-        <small>Turn this off to let the selected image show without the theme color layer.</small>
-      </div>
 
-      <label>Background image</label>
-      <div class="bg-file-row">
-        <label class="file-button" for="bgFileInput">Choose image</label>
-        <input id="bgFileInput" type="file" accept="image/*" hidden />
-        <button class="ghost-button bg-clear-button" id="clearBgFile" type="button">Remove</button>
-      </div>
-      <small id="bgFileName">No local image selected</small>
+    <div class="appearance-grid">
+      <section class="appearance-section">
+        <div class="appearance-section-head"><span>01</span><div><b>PROFILE</b><small>Local identity for this browser</small></div></div>
+        <div class="setting-block">
+          <label>Local nickname</label>
+          <input id="profileNameInput" class="text-input" maxlength="24" autocomplete="nickname" placeholder="Your nickname" />
+          <small>Stored only in this browser.</small>
+        </div>
+      </section>
+
+      <section class="appearance-section">
+        <div class="appearance-section-head"><span>02</span><div><b>COLORS</b><small>Control the visual language</small></div></div>
+        <div class="setting-block">
+          <div class="color-grid">
+            <label class="color-field"><span>Primary</span><input id="primaryColor" type="color" value="#e7e7e7" /></label>
+            <label class="color-field"><span>Secondary</span><input id="secondaryColor" type="color" value="#8f8f8f" /></label>
+            <label class="color-field"><span>Accent</span><input id="accentColor" type="color" value="#c8c8c8" /></label>
+            <label class="color-field"><span>Surface</span><input id="surfaceColor" type="color" value="#111111" /></label>
+            <label class="color-field"><span>Background</span><input id="backgroundColor" type="color" value="#070707" /></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="appearance-section appearance-section-wide">
+        <div class="appearance-section-head"><span>03</span><div><b>BACKGROUND</b><small>Your image stays behind the entire experience</small></div></div>
+        <div class="appearance-columns">
+          <div class="setting-block compact-block">
+            <div class="setting-inline">
+              <label class="switch-field">
+                <input id="bgColorEnabled" type="checkbox" checked />
+                <span class="switch-ui"></span>
+                <span>Use background color</span>
+              </label>
+              <small>Disable it to reveal the selected image more directly.</small>
+            </div>
+            <label>Background image</label>
+            <div class="bg-file-row">
+              <label class="file-button" for="bgFileInput">Choose image</label>
+              <input id="bgFileInput" type="file" accept="image/*" hidden />
+              <button class="ghost-button bg-clear-button" id="clearBgFile" type="button">Remove</button>
+            </div>
+            <small id="bgFileName">No local image selected</small>
+          </div>
+
+          <div class="setting-block compact-block">
+            <label>Background image URL</label>
+            <input id="bgUrlInput" class="text-input" placeholder="https://..." />
+            <small>Leave empty when using a local file.</small>
+          </div>
+
+          <div class="setting-block compact-block">
+            <label>Image opacity <span id="bgOpacityValue">100%</span></label>
+            <input id="bgOpacityRange" type="range" min="0" max="100" value="100" />
+          </div>
+
+          <div class="setting-block compact-block">
+            <label>Image blur <span id="bgBlurValue">0px</span></label>
+            <input id="bgBlurRange" type="range" min="0" max="24" value="0" />
+          </div>
+        </div>
+      </section>
+
+      <section class="appearance-section">
+        <div class="appearance-section-head"><span>04</span><div><b>GLASS</b><small>Every frosted surface follows this value</small></div></div>
+        <div class="setting-block">
+          <label>Glass intensity <span id="glassValue">16px</span></label>
+          <input id="glassRange" type="range" min="0" max="35" value="16" />
+        </div>
+        <div class="setting-block">
+          <label>Motion</label>
+          <div class="segmented"><button data-motion="full" class="active">Full</button><button data-motion="reduced">Reduced</button></div>
+        </div>
+      </section>
+
+      <section class="appearance-section">
+        <div class="appearance-section-head"><span>05</span><div><b>PLAYLIST STAGE</b><small>Cards and opened playlist panel</small></div></div>
+        <div class="setting-block">
+          <label>Playlist opacity <span id="carouselOpacityValue">100%</span></label>
+          <input id="carouselOpacityRange" type="range" min="20" max="100" value="100" />
+        </div>
+        <div class="setting-block">
+          <label>Playlist blur <span id="carouselBlurValue">0px</span></label>
+          <input id="carouselBlurRange" type="range" min="0" max="18" value="0" />
+        </div>
+        <div class="setting-block">
+          <label>Open panel opacity <span id="playlistPanelOpacityValue">96%</span></label>
+          <input id="playlistPanelOpacityRange" type="range" min="45" max="100" value="96" />
+        </div>
+        <div class="setting-block">
+          <label>Open panel blur <span id="playlistPanelBlurValue">16px</span></label>
+          <input id="playlistPanelBlurRange" type="range" min="0" max="28" value="16" />
+        </div>
+      </section>
     </div>
-    <div class="setting-block">
-      <label>Background image URL</label>
-      <input id="bgUrlInput" class="text-input" placeholder="https://..." />
-      <small>Leave empty when using a local file.</small>
-    </div>
-    <div class="setting-block">
-      <label>Image opacity <span id="bgOpacityValue">100%</span></label>
-      <input id="bgOpacityRange" type="range" min="0" max="100" value="100" />
-    </div>
-    <div class="setting-block">
-      <label>Image blur <span id="bgBlurValue">0px</span></label>
-      <input id="bgBlurRange" type="range" min="0" max="24" value="0" />
-    </div>
-    <div class="setting-block">
-      <label>Glass intensity <span id="glassValue">16px</span></label>
-      <input id="glassRange" type="range" min="0" max="35" value="16" />
-    </div>
-    <div class="setting-block">
-      <label>Playlist opacity <span id="carouselOpacityValue">100%</span></label>
-      <input id="carouselOpacityRange" type="range" min="20" max="100" value="100" />
-    </div>
-    <div class="setting-block">
-      <label>Playlist blur <span id="carouselBlurValue">0px</span></label>
-      <input id="carouselBlurRange" type="range" min="0" max="18" value="0" />
-    </div>
-    <div class="setting-block">
-      <label>Motion</label>
-      <div class="segmented"><button data-motion="full" class="active">Full</button><button data-motion="reduced">Reduced</button></div>
-    </div>
-    <div class="modal-actions">
+
+    <div class="modal-actions appearance-actions">
       <button class="ghost-button" id="resetAppearance" type="button">Reset appearance</button>
       <button class="primary-button" id="saveSettings">Save settings</button>
     </div>
