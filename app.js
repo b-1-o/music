@@ -253,6 +253,7 @@ function bindEvents() {
     }
     $("#volumeBtn").textContent = state.muted ? "⊘" : "◖";
   });
+  $("#stopBtn")?.addEventListener("click", stopPlayback);
   $("#progressBar").addEventListener("input", e => {
     if (!state.yt || !state.yt.getDuration) return;
     const duration = state.yt.getDuration();
@@ -1092,6 +1093,34 @@ function playRelative(delta) {
   if (next >= state.queue.length) next = 0;
   state.queueIndex = next;
   playTrack(state.queue[next]);
+}
+
+function stopPlayback() {
+  if (state.yt?.stopVideo) state.yt.stopVideo();
+  if (progressTimer) {
+    clearInterval(progressTimer);
+    progressTimer = 0;
+  }
+  state.current = null;
+  state.queue = [];
+  state.queueIndex = -1;
+  state.muted = false;
+  updatePlayerUI();
+  const bar = $("#progressBar");
+  if (bar) bar.value = 0;
+  const fullBar = $("#fullPlayerProgress");
+  if (fullBar) fullBar.value = 0;
+  const now = $("#currentTime");
+  const duration = $("#duration");
+  const fullNow = $("#fullPlayerCurrentTime");
+  const fullDuration = $("#fullPlayerDuration");
+  if (now) now.textContent = "0:00";
+  if (duration) duration.textContent = "0:00";
+  if (fullNow) fullNow.textContent = "0:00";
+  if (fullDuration) fullDuration.textContent = "0:00";
+  $("#stopBtn")?.classList.add("active");
+  window.setTimeout(() => $("#stopBtn")?.classList.remove("active"), 220);
+  toast("Music stopped.");
 }
 
 function togglePlay() {
