@@ -213,3 +213,37 @@ button:focus-visible,input:focus-visible{outline-color:var(--theme-accent)}
 .discover-grid{display:none}
 @media(max-width:850px){.home-minimal{padding:96px 24px 60px}.home-minimal .playlist-carousel{height:560px;min-height:560px}}
 @media(max-width:620px){.home-minimal{padding:88px 14px 45px}.home-minimal-head{padding-inline:5px}.home-minimal .playlist-carousel{height:510px;min-height:510px}}
+
+/* Final polish: real background layer, focused playlist stage, system toast, custom covers */
+.background-image{z-index:0;opacity:var(--bg-image-opacity);filter:blur(var(--bg-image-blur));transform:scale(1.045);pointer-events:none}
+.app-shell{position:relative;z-index:1}
+.grain{z-index:90}
+.home-minimal{min-height:calc(100vh - var(--player));padding:106px 4vw 120px;display:flex;flex-direction:column}
+.home-minimal-head{max-width:1240px;width:100%;margin:0 auto 12px;padding:0 8px 12px}
+.home-minimal .carousel-frame{width:min(1240px,100%);margin:0 auto}
+.home-minimal .playlist-carousel{height:610px;min-height:610px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(0,0,0,.16));box-shadow:inset 0 1px rgba(255,255,255,.05),0 35px 100px rgba(0,0,0,.2)}
+.playlist-carousel .playlist-card{width:286px;height:402px;margin:-201px 0 0 -143px}
+.playlist-carousel .playlist-card.is-center{box-shadow:0 34px 95px rgba(0,0,0,.68),0 0 0 1px color-mix(in srgb,var(--theme-accent) 36%,transparent),inset 0 1px rgba(255,255,255,.22)}
+.playlist-fallback-art{width:100%;height:100%;display:grid;place-items:center;background:linear-gradient(135deg,#222,#0b0b0b);color:#cfcfcf;font:600 52px Manrope}
+.playlist-fallback-art span{opacity:.7}
+.playlist-page-art-wrap{display:flex;flex-direction:column;gap:10px}
+.playlist-cover-actions{display:flex;gap:6px;flex-wrap:wrap}
+.playlist-cover-actions .file-button,.playlist-cover-actions .ghost-button{min-height:36px;padding-inline:11px}
+.toast{left:auto;right:22px;bottom:132px;transform:translateY(12px);min-width:230px;max-width:min(360px,calc(100vw - 32px));padding:12px 13px 13px;display:grid;grid-template-columns:22px 1fr;align-items:center;gap:9px;opacity:0;visibility:hidden;border:1px solid rgba(255,255,255,.13);border-radius:13px;background:rgba(17,18,22,.92);backdrop-filter:blur(16px) saturate(110%);-webkit-backdrop-filter:blur(16px) saturate(110%);box-shadow:0 22px 65px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.07);transition:opacity .18s ease,transform .22s var(--ease),visibility .18s ease}
+.toast.show{opacity:1;visibility:visible;transform:translateY(0)}
+.toast-icon{width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:color-mix(in srgb,var(--theme-accent) 18%,transparent);color:var(--theme-accent);font:600 10px Manrope}
+.toast-text{min-width:0;color:var(--theme-primary);font:500 9px Manrope;line-height:1.35}
+.toast-progress{grid-column:1/-1;height:2px;margin-top:2px;border-radius:99px;background:color-mix(in srgb,var(--theme-secondary) 14%,transparent);overflow:hidden;position:relative}
+.toast-progress::after{content:"";position:absolute;inset:0;background:var(--theme-accent);transform-origin:left;animation:toastLife 2s linear both}
+@keyframes toastLife{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(max-width:850px){
+  .home-minimal{padding:92px 20px 100px}
+  .home-minimal .playlist-carousel{height:550px;min-height:550px}
+}
+@media(max-width:620px){
+  .home-minimal{padding:84px 10px 86px}
+  .home-minimal .playlist-carousel{height:490px;min-height:490px;border-radius:21px}
+  .home-minimal-head{padding-inline:5px}
+  .playlist-carousel .playlist-card{width:236px;height:344px;margin:-172px 0 0 -118px}
+  .toast{right:12px;bottom:176px;min-width:0;width:calc(100vw - 24px)}
+}
