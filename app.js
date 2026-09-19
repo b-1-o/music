@@ -270,6 +270,10 @@ function bindEvents() {
     state.yt.seekTo((Number(e.target.value) / 100) * duration, true);
   });
   $("#expandPlayer").addEventListener("click", () => setExpandedPlayer(!document.body.classList.contains("player-expanded")));
+  $("#playerBar .now-playing")?.addEventListener("click", event => {
+    if (window.innerWidth > 620 || event.target.closest("button")) return;
+    if (state.current) setExpandedPlayer(true);
+  });
   $("#miniVideoExpand")?.addEventListener("click", () => setExpandedPlayer(true));
   $("#nowArt").addEventListener("click", () => {
     if (state.current) setExpandedPlayer(true);
@@ -659,6 +663,7 @@ function renderPlaylists() {
   let drag = null;
   let suppressClick = false;
   let suppressTimer = 0;
+  let mobileSwitchTimer = 0;
 
   const wrap = (value, total) => ((value + total / 2) % total + total) % total - total / 2;
   const modulo = (value, total) => ((value % total) + total) % total;
@@ -668,12 +673,30 @@ function renderPlaylists() {
 
   function render() {
     const width = host.clientWidth;
+    const mobile = window.innerWidth <= 620;
     const step = width < 680 ? 255 : width < 1000 ? 300 : 330;
+    host.classList.toggle("mobile-single", mobile);
     const total = buttons.length;
     phase += (target - phase) * 0.14;
     if (Math.abs(target - phase) < 0.0005) phase = target;
 
     buttons.forEach((button, index) => {
+      if (mobile) {
+        const activeIndex = modulo(Math.round(phase), total);
+        const active = index === activeIndex;
+        const dragOffset = active && drag?.moved ? Math.max(-width * 0.42, Math.min(width * 0.42, drag.offset || 0)) : 0;
+        button.style.transform = active
+          ? "translate3d(" + dragOffset + "px,0,0) scale(1)"
+          : "translate3d(0,0,0) scale(.96)";
+        button.style.opacity = active ? "1" : "0";
+        button.style.zIndex = active ? "20" : "0";
+        button.style.pointerEvents = active ? "auto" : "none";
+        button.style.filter = active ? "none" : "none";
+        button.classList.toggle("is-center", active);
+        button.tabIndex = active ? 0 : -1;
+        return;
+      }
+
       const slot = wrap(index - phase, total);
       const abs = Math.abs(slot);
       const x = slot * step + slot * abs * 13;
@@ -686,6 +709,7 @@ function renderPlaylists() {
       button.style.transform = "translate3d(" + x + "px," + y + "px,0) rotateZ(" + rotate + "deg) rotateY(" + rotateY + "deg) scale(" + scale + ")";
       button.style.opacity = String(opacity);
       button.style.zIndex = String(100 - Math.round(abs * 12));
+      button.style.pointerEvents = "auto";
       button.classList.toggle("is-center", abs < 0.5);
       button.tabIndex = abs < 0.5 ? 0 : -1;
     });
@@ -706,6 +730,13 @@ function renderPlaylists() {
   const moveBy = (direction) => {
     if (host.classList.contains("is-open")) return;
     target = Math.round(target) + direction;
+    if (window.innerWidth <= 620) {
+      host.classList.remove("is-mobile-switching");
+      void host.offsetWidth;
+      host.classList.add("is-mobile-switching");
+      window.clearTimeout(mobileSwitchTimer);
+      mobileSwitchTimer = window.setTimeout(() => host.classList.remove("is-mobile-switching"), 320);
+    }
     requestRender();
   };
 
@@ -729,6 +760,7 @@ function renderPlaylists() {
       if (suppressClick) {
         suppressClick = false;
         window.clearTimeout(suppressTimer);
+    window.clearTimeout(mobileSwitchTimer);
         return;
       }
 
@@ -743,7 +775,7 @@ function renderPlaylists() {
   });
 
   const onWheel = (event) => {
-    if (host.classList.contains("is-open")) return;
+    if (host.classList.contains("is-open") || window.innerWidth <= 620) return;
     const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
     if (!delta) return;
     event.preventDefault();
@@ -754,7 +786,7 @@ function renderPlaylists() {
   const onPointerDown = (event) => {
     if (host.classList.contains("is-open")) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    drag = { pointerId: event.pointerId, startX: event.clientX, startTarget: target, moved: false };
+    drag = { pointerId: event.pointerId, startX: event.clientX, startTarget: Math.round(target), offset: 0, moved: false };
     event.preventDefault();
   };
 
@@ -764,7 +796,7 @@ function renderPlaylists() {
     if (Math.abs(dx) > 8) drag.moved = true;
     if (drag.moved) {
       event.preventDefault();
-      target = drag.startTarget - dx / 245;
+      drag.offset = dx;
       requestRender();
     }
   };
@@ -772,7 +804,21 @@ function renderPlaylists() {
   const onPointerUp = (event) => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     if (drag.moved) {
-      target = Math.round(target);
+      const mobile = window.innerWidth <= 620;
+      if (mobile) {
+        const threshold = Math.max(54, Math.min(host.clientWidth * 0.18, 92));
+        const direction = Math.abs(drag.offset || 0) >= threshold ? (drag.offset < 0 ? 1 : -1) : 0;
+        target = drag.startTarget + direction;
+        if (direction) {
+          host.classList.remove("is-mobile-switching");
+          void host.offsetWidth;
+          host.classList.add("is-mobile-switching");
+          window.clearTimeout(mobileSwitchTimer);
+          mobileSwitchTimer = window.setTimeout(() => host.classList.remove("is-mobile-switching"), 320);
+        }
+      } else {
+        target = Math.round(target);
+      }
       requestRender();
       suppressClick = true;
       window.clearTimeout(suppressTimer);
@@ -1462,6 +1508,10 @@ function setExpandedPlayer(open) {
     return;
   }
   document.body.classList.toggle("player-expanded", !!open);
+  if (window.innerWidth <= 620) {
+    document.documentElement.classList.toggle("player-expanded-mobile", !!open);
+    document.body.style.overflow = open ? "hidden" : "";
+  }
   const full = $("#fullPlayer");
   if (full) full.setAttribute("aria-hidden", open ? "false" : "true");
   if (open) {
