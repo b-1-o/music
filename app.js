@@ -1131,8 +1131,10 @@ function onYTStateChange(event) {
     syncProgress();
   } else {
     syncPlayerModes();
-    if (progressTimer) cancelAnimationFrame(progressTimer);
-    progressTimer = 0;
+    if (progressTimer) {
+      clearInterval(progressTimer);
+      progressTimer = 0;
+    }
   }
   if (event.data === states.ENDED) {
     if (state.repeated && state.current) {
@@ -1144,30 +1146,46 @@ function onYTStateChange(event) {
 }
 
 function syncProgress() {
-  if (progressTimer) return;
+  if (!state.yt?.getCurrentTime) return;
+
   const tick = () => {
     if (!state.yt?.getCurrentTime) {
-      progressTimer = 0;
+      if (progressTimer) {
+        clearInterval(progressTimer);
+        progressTimer = 0;
+      }
       return;
     }
+
     const duration = state.yt.getDuration?.() || 0;
     const current = state.yt.getCurrentTime?.() || 0;
     const progress = duration ? (current / duration) * 100 : 0;
-    $("#currentTime").textContent = formatTime(current);
-    $("#duration").textContent = formatTime(duration);
-    $("#progressBar").value = progress;
-    $("#fullPlayerCurrentTime") && ($("#fullPlayerCurrentTime").textContent = formatTime(current));
-    $("#fullPlayerDuration") && ($("#fullPlayerDuration").textContent = formatTime(duration));
-    $("#fullPlayerProgress") && ($("#fullPlayerProgress").value = progress);
-    if (state.yt.getPlayerState?.() === 1) {
-      progressTimer = requestAnimationFrame(tick);
-    } else {
+
+    const currentTime = $("#currentTime");
+    const durationEl = $("#duration");
+    const progressBar = $("#progressBar");
+    const fullCurrent = $("#fullPlayerCurrentTime");
+    const fullDuration = $("#fullPlayerDuration");
+    const fullProgress = $("#fullPlayerProgress");
+
+    if (currentTime) currentTime.textContent = formatTime(current);
+    if (durationEl) durationEl.textContent = formatTime(duration);
+    if (progressBar) progressBar.value = progress;
+    if (fullCurrent) fullCurrent.textContent = formatTime(current);
+    if (fullDuration) fullDuration.textContent = formatTime(duration);
+    if (fullProgress) fullProgress.value = progress;
+
+    if (state.yt.getPlayerState?.() !== 1 && progressTimer) {
+      clearInterval(progressTimer);
       progressTimer = 0;
     }
   };
-  progressTimer = requestAnimationFrame(tick);
-}
 
+  tick();
+  if (state.yt.getPlayerState?.() === 1 && !progressTimer) {
+    progressTimer = window.setInterval(tick, 250);
+  }
+}
 
 function syncPlayerModes() {
   $("#shuffleBtn")?.classList.toggle("active", state.shuffled);
@@ -1577,8 +1595,17 @@ function enhanceNavigation() {
 
 function enhanceShortcuts() {
   window.addEventListener("keydown", event => {
-    const tag = document.activeElement?.tagName;
-    const typing = tag === "INPUT" || tag === "TEXTAREA";
+    const active = document.activeElement;
+    const tag = active?.tagName;
+    const typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || active?.isContentEditable;
+    const interactive = !!active?.closest?.("button,a,select,textarea,input,[contenteditable='true'],dialog[open]");
+
+    if (event.code === "Space" && !typing && !interactive && !event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      togglePlay();
+      return;
+    }
+
     if (event.key === "/" && !typing) { event.preventDefault(); $("#searchInput")?.focus(); showView("search"); }
     if (event.key.toLowerCase() === "h" && !typing) showView("home");
     if (event.key.toLowerCase() === "s" && !typing) showView("search");
