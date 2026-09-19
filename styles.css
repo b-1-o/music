@@ -202,7 +202,31 @@ input[type="range"] { accent-color:#fff; width:100%; }
 .volume { width:84px; }
 
 .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:49; }
-.youtube-host { position:fixed; width:1px; height:1px; left:-9999px; top:-9999px; opacity:.001; pointer-events:none; }
+.youtube-host {
+  position: fixed;
+  right: 28px;
+  bottom: 112px;
+  width: min(480px, 38vw);
+  aspect-ratio: 16 / 9;
+  min-width: 280px;
+  z-index: 35;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: #000;
+  box-shadow: 0 24px 70px rgba(0,0,0,.45);
+}
+#yt-player, #yt-player iframe {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+@media (max-width: 900px) {
+  .youtube-host { right: 16px; bottom: 112px; width: 360px; min-width: 0; }
+}
+@media (max-width: 620px) {
+  .youtube-host { right: 10px; left: 10px; bottom: 156px; width: auto; }
+}
 
 dialog.modal { width:min(540px, calc(100vw - 28px)); color:var(--text); padding:22px; border-radius:24px; border:1px solid var(--border); background:rgba(17,17,22,.86); }
 dialog.modal::backdrop { background:rgba(0,0,0,.67); backdrop-filter:blur(5px); }
