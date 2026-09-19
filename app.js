@@ -1533,9 +1533,9 @@ function setExpandedPlayer(open) {
     document.documentElement.style.overflow = open ? "hidden" : "";
 
     if (mobileBar) {
-      mobileBar.style.display = open ? "none" : "";
-      mobileBar.style.visibility = open ? "hidden" : "";
-      mobileBar.style.pointerEvents = open ? "none" : "";
+      mobileBar.style.setProperty("display", open ? "none" : "", "important");
+      mobileBar.style.setProperty("visibility", open ? "hidden" : "", "important");
+      mobileBar.style.setProperty("pointer-events", open ? "none" : "", "important");
     }
     if (topbar) {
       topbar.style.display = open ? "none" : "";
@@ -1554,8 +1554,8 @@ function setExpandedPlayer(open) {
       full.style.transform = open ? "none" : "";
       full.style.transition = open ? "opacity .28s ease, transform .42s cubic-bezier(.16,1,.3,1)" : "";
     }
-    if (closeButton) {
-      closeButton.style.display = "grid";
+    if (closeButton && open) {
+      closeButton.style.setProperty("display", "grid", "important");
       closeButton.style.visibility = "visible";
       closeButton.style.opacity = "1";
       closeButton.style.pointerEvents = "auto";
