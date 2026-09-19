@@ -152,9 +152,16 @@ function bindEvents() {
     state.settings.bgColorEnabled = e.target.checked;
     applySettings();
   });
+  $("#glassRange")?.addEventListener("input", e => {
+    const value = Number(e.target.value);
+    state.settings.glass = value;
+    const label = $("#glassValue");
+    if (label) label.textContent = value + "px";
+    applySettings();
+  });
   $("#bgBlurRange")?.addEventListener("input", e => {
     if ($("#bgBlurValue")) $("#bgBlurValue").textContent = e.target.value + "px";
-    state.settings.bgBlur = Number(e.target.value);
+    state.settings.bgBlur = 0;
     applySettings();
   });
   $("#bgFileInput")?.addEventListener("change", handleBackgroundFile);
@@ -520,6 +527,7 @@ function renderPlaylists() {
 
   function render() {
     const width = host.clientWidth;
+    const step = width < 680 ? 255 : width < 1000 ? 300 : 330;
     const total = buttons.length;
     phase += (target - phase) * 0.14;
     if (Math.abs(target - phase) < 0.0005) phase = target;
