@@ -117,6 +117,7 @@
         <span id="nowArtist">Choose a track to begin</span>
       </div>
       <button class="heart-button" id="likeCurrent" aria-label="Like current track">♡</button>
+      <button class="playlist-add-button" id="addCurrentToPlaylist" aria-label="Add current track to playlist" title="Add to playlist">＋</button>
     </div>
 
     <div class="player-controls">
@@ -169,7 +170,10 @@
 
     <div class="full-player-bottom">
       <div class="full-player-meta">
-        <button class="full-player-like" id="fullPlayerLike" aria-label="Like current track">♡</button>
+        <div class="full-player-actions">
+          <button class="full-player-like" id="fullPlayerLike" aria-label="Like current track">♡</button>
+          <button class="full-player-add" id="fullPlayerAdd" aria-label="Add current track to playlist" title="Add to playlist">＋</button>
+        </div>
         <div class="full-player-time"><span id="fullPlayerCurrentTime">0:00</span><span id="fullPlayerDuration">0:00</span></div>
       </div>
 
@@ -289,8 +293,25 @@
         </div>
       </section>
 
+      <section class="appearance-section appearance-section-wide playback-section">
+        <div class="appearance-section-head"><span>06</span><div><b>PLAYBACK</b><small>YouTube or your own local audio</small></div></div>
+        <div class="setting-block">
+          <label>Ad-free alternative</label>
+          <div class="playback-choice">
+            <div class="playback-choice-main">
+              <strong>Local audio files</strong>
+              <span>Import audio you already own and keep it in this browser.</span>
+            </div>
+            <label class="file-button" for="localAudioInput">Import audio</label>
+            <input id="localAudioInput" type="file" accept="audio/*" multiple hidden />
+          </div>
+          <small>Search results continue to use the official YouTube player. This site does not convert or download YouTube audio.</small>
+          <small id="localAudioStatus">No local audio imported.</small>
+        </div>
+      </section>
+
       <section class="appearance-section">
-        <div class="appearance-section-head"><span>05</span><div><b>PLAYLIST STAGE</b><small>Cards and opened playlist panel</small></div></div>
+        <div class="appearance-section-head"><span>07</span><div><b>PLAYLIST STAGE</b><small>Cards and opened playlist panel</small></div></div>
         <div class="setting-block">
           <label>Playlist opacity <span id="carouselOpacityValue">100%</span></label>
           <input id="carouselOpacityRange" type="range" min="20" max="100" value="100" />
