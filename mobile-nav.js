@@ -93,6 +93,21 @@
     }, true);
   }
 
+  function bindProfileSettings() {
+    var profile = qs("#profileChip");
+    var dialog = qs("#settingsDialog");
+    if (!profile || !dialog || profile.dataset.mobileProfileBound === "1") return;
+    profile.dataset.mobileProfileBound = "1";
+    profile.addEventListener("click", function (e) {
+      if (window.innerWidth > 850) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (!dialog.open) {
+        try { dialog.showModal(); } catch (err) { dialog.setAttribute("open", ""); }
+      }
+    }, true);
+  }
+
   function bindDrawer() {
     var overlay = qs("#overlay") || qs(".overlay");
     var sidebar = qs(".sidebar");
@@ -126,6 +141,7 @@
   function boot() {
     bindTabs();
     bindDrawer();
+    bindProfileSettings();
   }
 
   if (document.readyState === "loading") {
