@@ -300,7 +300,6 @@ function bindEvents() {
   });
 
   $("#backFromPlaylist").addEventListener("click", () => showView("library"));
-  $(".overlay").addEventListener("click", () => closeMobileSidebar());
   $$("[data-close-dialog]").forEach(btn => btn.addEventListener("click", () => document.getElementById(btn.dataset.closeDialog).close()));
   $$("dialog").forEach(dialog => {
     dialog.addEventListener("click", event => {
@@ -334,31 +333,16 @@ function resetSearchView() {
   $("#searchView")?.classList.remove("search-has-results");
 }
 
-function openMobileSidebar() {
-  const sidebar = $(".sidebar");
-  const overlay = $(".overlay");
-  const button = $("#mobileMenuBtn");
-  if (!sidebar) return;
-  sidebar.classList.add("open");
-  overlay?.classList.add("active");
-  if (overlay) overlay.style.display = "block";
-  button?.setAttribute("aria-expanded", "true");
-}
-
 function closeMobileSidebar() {
   const sidebar = $(".sidebar");
   const overlay = $(".overlay");
-  const button = $("#mobileMenuBtn");
   sidebar?.classList.remove("open");
   overlay?.classList.remove("active");
   if (overlay) overlay.style.display = "none";
-  button?.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("sidebar-open");
+  document.body.style.overflow = "";
 }
 
-function toggleMobileSidebar() {
-  if ($(".sidebar")?.classList.contains("open")) closeMobileSidebar();
-  else openMobileSidebar();
-}
 
 function showView(view) {
   const views = {
