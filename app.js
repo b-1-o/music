@@ -452,7 +452,7 @@ function saveSettings() {
 }
 
 function resetAppearance() {
-  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:28, bgBlur:8 };
+  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:28, bgBlur:8, bgColorEnabled:true };
   clearStoredBackground().catch(() => {});
   if (backgroundObjectUrl) { URL.revokeObjectURL(backgroundObjectUrl); backgroundObjectUrl = null; }
   saveState();
