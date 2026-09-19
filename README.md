@@ -24,20 +24,25 @@ An immersive, local-first music web app inspired by the visual language of the o
 
 ## Setup
 
-1. Create a Google Cloud project.
-2. Enable **YouTube Data API v3**.
-3. Create an API key.
-4. Open b1api and press **API**.
-5. Paste the key. It is stored only in the current browser with localStorage.
-6. For a public deployment, restrict the key to your GitHub Pages HTTP referrer.
+### YouTube API — owner only
 
-The app does not download or host audio files. Playback uses the official YouTube IFrame Player.
+The public site uses one repository-owned **YouTube Data API v3** key. Visitors do not enter an API key.
 
-## GitHub Pages
+1. In Google Cloud, enable **YouTube Data API v3** and create the key.
+2. Restrict the key to the GitHub Pages HTTP referrer, for example:
+   `https://b-1-o.github.io`
+3. In GitHub, open **Settings → Secrets and variables → Actions → New repository secret**.
+4. Name the secret:
+   `YOUTUBE_API_KEY`
+5. Paste the YouTube API key as the secret value.
 
-This project is plain HTML/CSS/JavaScript, so it can be served directly from the repository root.
+### GitHub Pages
 
-Enable **Settings → Pages → Deploy from a branch → main → / (root)**.
+Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**.
+
+The workflow at `.github/workflows/pages.yml` generates `config.js` during deployment from `YOUTUBE_API_KEY`, then publishes the static site with the official GitHub Pages Actions flow.
+
+The key is not committed to the source repository. Because a browser must use the YouTube API directly, the deployed page can still expose the key to visitors at runtime. The Google Cloud HTTP-referrer restriction is therefore important.
 
 ## Local data
 
