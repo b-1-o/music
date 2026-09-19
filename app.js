@@ -172,6 +172,7 @@ function showView(view) {
 function renderSearchStatus() {
   const el = $("#searchStatus");
   el.textContent = state.apiKey ? "YouTube connected · search is ready." : "Connect a YouTube API key to search.";
+  updateApiStatusChip();
 }
 
 function openApiDialog() {
@@ -406,7 +407,8 @@ async function searchYouTube(query) {
   const host = $("#searchResults");
   host.innerHTML = `<div class="empty-state glass"><div class="empty-icon">⋯</div><h3>Searching.</h3><p>Looking through YouTube…</p></div>`;
   if (!state.apiKey) {
-    openApiDialog();
+    if (localStorage.getItem("b1api_first_run_seen") === "1") openApiDialog();
+    else openFirstRun();
     return;
   }
 
@@ -544,7 +546,9 @@ function setupYouTube() {
         playsinline: 1,
         controls: 1,
         rel: 0,
-        modestbranding: 1
+        modestbranding: 1,
+        origin: window.location.origin,
+        enablejsapi: 1
       },
       events: {
         onReady: () => {
@@ -835,4 +839,146 @@ function escapeHTML(value) {
 }
 function escapeAttr(value) { return escapeHTML(value); }
 
+i
+function updateApiStatusChip() {
+  const chip = $("#apiStatus");
+  const label = $("#heroApiLabel");
+  const settings = $("#settingsApiStatus");
+  if (!chip) return;
+  chip.classList.toggle("connected", !!state.apiKey);
+  const textEl = chip.querySelector("b");
+  if (textEl) textEl.textContent = state.apiKey ? "API ON" : "API OFF";
+  if (label) label.textContent = state.apiKey ? "CONNECTED" : "CONNECT API";
+  if (settings) settings.textContent = state.apiKey ? "Connected · YouTube Data API v3" : "Not connected";
+}
+
+function openFirstRun() {
+  const el = $("#firstRun");
+  if (!el) return;
+  el.classList.add("open");
+  el.setAttribute("aria-hidden", "false");
+  document.body.classList.add("first-run-open");
+}
+
+function closeFirstRun(markSeen = true) {
+  const el = $("#firstRun");
+  if (!el) return;
+  if (markSeen) localStorage.setItem("b1api_first_run_seen", "1");
+  el.classList.remove("open");
+  el.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("first-run-open");
+}
+
+function updateRoute(view) {
+  const names = { home:["01","Home"], search:["02","Search"], library:["03","Library"], playlist:["04","Playlist"] };
+  const item = names[view] || names.home;
+  if ($("#routeNumber")) $("#routeNumber").textContent = item[0];
+  if ($("#routeName")) $("#routeName").textContent = item[1];
+  $$(".home-top-button, .nav-item[data-view]").forEach(btn => {
+    const key = btn.dataset.view;
+    if (key === view) btn.classList.add("active");
+    else if (key) btn.classList.remove("active");
+  });
+}
+
+function addProfessionalInteractions() {
+  document.addEventListener("pointermove", event => {
+    document.documentElement.style.setProperty("--mx", event.clientX + "px");
+    document.documentElement.style.setProperty("--my", event.clientY + "px");
+  }, { passive: true });
+
+  $$(".tilt-card, .discover-card").forEach(card => {
+    card.addEventListener("pointermove", event => {
+      if (document.body.classList.contains("reduced-motion")) return;
+      const rect = card.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - .5;
+      const y = (event.clientY - rect.top) / rect.height - .5;
+      card.style.transform = "perspective(900px) rotateX(" + (-y*4).toFixed(2) + "deg) rotateY(" + (x*5).toFixed(2) + "deg) translateY(-3px)";
+    });
+    card.addEventListener("pointerleave", () => { card.style.transform = ""; });
+  });
+
+  $$(".magnetic").forEach(button => {
+    button.addEventListener("pointermove", event => {
+      if (document.body.classList.contains("reduced-motion")) return;
+      const rect = button.getBoundingClientRect();
+      const x = event.clientX - (rect.left + rect.width / 2);
+      const y = event.clientY - (rect.top + rect.height / 2);
+      button.style.transform = "translate(" + (x*.055).toFixed(2) + "px," + (y*.055).toFixed(2) + "px)";
+    });
+    button.addEventListener("pointerleave", () => { button.style.transform = ""; });
+  });
+}
+
+function enhanceNavigation() {
+  const originalShowView = showView;
+  showView = function(view) {
+    originalShowView(view);
+    updateRoute(view);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  $("#homeTopBtn")?.addEventListener("click", () => showView("home"));
+  $("#profileChip")?.addEventListener("click", () => $("#settingsDialog").showModal());
+  $("#apiStatus")?.addEventListener("click", openApiDialog);
+  $("#queueBtnTop")?.addEventListener("click", () => { renderQueue(); $("#queueDialog").showModal(); });
+
+  $("#carouselPrev")?.addEventListener("click", () => {
+    const host = $("#playlistCarousel");
+    const cards = $$(".playlist-card", host);
+    if (!cards.length) return;
+    centerPlaylistCard(Math.max(0, getNearestCarouselIndex(host, cards) - 1), host, cards);
+  });
+  $("#carouselNext")?.addEventListener("click", () => {
+    const host = $("#playlistCarousel");
+    const cards = $$(".playlist-card", host);
+    if (!cards.length) return;
+    centerPlaylistCard(Math.min(cards.length - 1, getNearestCarouselIndex(host, cards) + 1), host, cards);
+  });
+
+  $("#showFirstRunKey")?.addEventListener("click", () => {
+    $("#firstRunKey")?.classList.toggle("open");
+    $("#firstRunApiKey")?.focus();
+  });
+  $("#saveFirstRunKey")?.addEventListener("click", () => {
+    const key = $("#firstRunApiKey")?.value.trim();
+    if (!key) return toast("Paste your YouTube API key first.");
+    state.apiKey = key;
+    localStorage.setItem(STORAGE.apiKey, key);
+    renderSearchStatus();
+    closeFirstRun(true);
+    toast("YouTube search connected.");
+  });
+  $("#continueFirstRun")?.addEventListener("click", () => { closeFirstRun(true); toast("You can connect YouTube later from API."); });
+  $("#closeFirstRun")?.addEventListener("click", () => closeFirstRun(true));
+  $("#mobileScrim")?.addEventListener("click", () => { $(".sidebar")?.classList.remove("open"); $("#mobileScrim")?.classList.remove("active"); });
+  updateRoute("home");
+  updateApiStatusChip();
+}
+
+function enhanceShortcuts() {
+  window.addEventListener("keydown", event => {
+    const tag = document.activeElement?.tagName;
+    const typing = tag === "INPUT" || tag === "TEXTAREA";
+    if (event.key === "/" && !typing) { event.preventDefault(); $("#searchInput")?.focus(); showView("search"); }
+    if (event.key.toLowerCase() === "h" && !typing) showView("home");
+    if (event.key.toLowerCase() === "s" && !typing) showView("search");
+    if (event.key.toLowerCase() === "l" && !typing) showView("library");
+    if (event.key === "Escape") { closeFirstRun(false); $(".sidebar")?.classList.remove("open"); }
+  });
+}
+
+function enhanceFirstRun() {
+  if (!state.apiKey && localStorage.getItem("b1api_first_run_seen") !== "1") window.setTimeout(openFirstRun, 500);
+}
+
+function enhanceB1api() {
+  enhanceNavigation();
+  addProfessionalInteractions();
+  enhanceShortcuts();
+  enhanceFirstRun();
+  updateApiStatusChip();
+}
+
 init();
+enhanceB1api();
