@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>b1api Browser Controls — Dashboard</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:#08090b;color:#eeeef1;font:14px/1.5 Inter,system-ui,sans-serif}
+main{width:min(900px,calc(100% - 40px));margin:58px auto}
+.eyebrow{color:#7e838d;font-size:10px;font-weight:800;letter-spacing:.18em}
+h1{font-size:50px;line-height:1;letter-spacing:-.06em;margin:8px 0}
+header p{color:#777e88;max-width:680px}
+.toolbar{display:flex;gap:8px;margin:24px 0}
+button{border:1px solid #292e37;border-radius:11px;padding:10px 13px;background:#11141a;color:#ddd;cursor:pointer}
+#rules{display:grid;gap:9px}
+.rule{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;padding:15px 16px;border:1px solid #242932;border-radius:14px;background:#0e1014}
+.rule strong{display:block}.rule small{color:#727985}
+.rule button{font-size:11px}
+.empty{padding:28px;border:1px dashed #292e37;border-radius:14px;color:#747b86}
+</style>
+</head>
+<body>
+<main>
+<header>
+<span class="eyebrow">B1API / BROWSER CONTROLS</span>
+<h1>Dashboard.</h1>
+<p>Per-site browser settings are stored locally in this extension.</p>
+</header>
+<div class="toolbar">
+<button id="resetAll">Reset all rules</button>
+<button id="openSite">Open b1api</button>
+</div>
+<section id="rules"></section>
+</main>
+<script>
+async function getRules(){
+  const data = await chrome.storage.local.get("siteRules");
+  return data.siteRules || {};
+}
+function label(pattern){
+  return pattern.replace(/^https?:\\/\\//,"").replace(/\\/\\*$/,"");
+}
+async function render(){
+  const host = document.getElementById("rules");
+  const rules = await getRules();
+  host.innerHTML = "";
+  const entries = Object.entries(rules);
+  if(!entries.length){
+    host.innerHTML = '<div class="empty">No custom site rules.</div>';
+    return;
+  }
+  for(const entry of entries){
+    const pattern = entry[0];
+    const settings = entry[1];
+    const row = document.createElement("article");
+    row.className = "rule";
+    const left = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = label(pattern);
+    const detail = document.createElement("small");
+    detail.textContent = Object.entries(settings).map(x=>x[0]+": "+x[1]).join(" · ");
+    left.append(title,detail);
+    const button = document.createElement("button");
+    button.textContent = "Remove site";
+    button.addEventListener("click",async()=>{
+      await chrome.runtime.sendMessage({type:"removePattern",pattern:pattern});
+      await render();
+    });
+    row.append(left,button);
+    host.appendChild(row);
+  }
+}
+document.getElementById("resetAll").addEventListener("click",async()=>{
+  await chrome.runtime.sendMessage({type:"clearAll"});
+  await render();
+});
+document.getElementById("openSite").addEventListener("click",()=>{
+  chrome.tabs.create({url:"https://b-1-o.github.io/music/"});
+});
+render();
+</script>
+</body>
+</html>
