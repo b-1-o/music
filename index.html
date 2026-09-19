@@ -297,6 +297,12 @@
       <label>Name</label>
       <input id="playlistNameInput" class="text-input" maxlength="40" placeholder="Night Drive" />
     </div>
+    <div class="setting-block">
+      <label>Cover image</label>
+      <label class="file-button playlist-cover-file-button" for="playlistCoverFile">Choose image</label>
+      <input id="playlistCoverFile" type="file" accept="image/*" hidden />
+      <small id="playlistCoverFileName">Default: first track cover</small>
+    </div>
     <div class="modal-actions">
       <button class="ghost-button" data-close-dialog="playlistDialog">Cancel</button>
       <button class="primary-button" id="createPlaylist">Create playlist</button>
