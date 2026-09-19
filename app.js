@@ -37,7 +37,13 @@ let state = {
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
-const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const $ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+let progressTimer = 0;
+let backgroundObjectUrl = null;
+let selectedBackgroundFile = null;
+const BG_DB_NAME = "b1api_assets";
+const BG_STORE = "files";
 
 function loadJSON(key, fallback) {
   try {
@@ -65,6 +71,8 @@ function init() {
   updatePlayerUI();
   renderLocalProfile();
   showView("home");
+  loadSavedBackground();
+  // YouTube iframe is created lazily on first playback.
   setupYouTube();
 }
 
@@ -85,6 +93,8 @@ function bindEvents() {
   $("#newPlaylistBtn").addEventListener("click", () => $("#playlistDialog").showModal());
   $("#createPlaylist").addEventListener("click", createPlaylist);
   $("#saveSettings").addEventListener("click", saveSettings);
+  $("#bgFileInput")?.addEventListener("change", handleBackgroundFile);
+  $("#clearBgFile")?.addEventListener("click", clearBackgroundFile);
   $("#playBtn").addEventListener("click", togglePlay);
   $("#nextBtn").addEventListener("click", () => playRelative(1));
   $("#prevBtn").addEventListener("click", () => playRelative(-1));
@@ -177,14 +187,104 @@ function applySettings() {
   const bg = state.settings.bgUrl?.trim();
   const bgEl = $("#backgroundImage");
   bgEl.style.backgroundImage = bg
-    ? `url("${bg}")`
-    : `radial-gradient(circle at 60% 20%, rgba(121, 104, 255, .17), transparent 34%), radial-gradient(circle at 15% 75%, rgba(0, 205, 255, .1), transparent 30%), #08080a`;
-  document.documentElement.style.setProperty("--blur", `${state.settings.glass}px`);
+    ? `url("${safeUrl(bg)}")`
+    : "radial-gradient(circle at 70% 20%, rgba(121,104,255,.14), transparent 32%), radial-gradient(circle at 15% 80%, rgba(0,190,255,.08), transparent 28%), #08080a";
+  document.documentElement.style.setProperty("--blur", `${Math.min(24, Number(state.settings.glass) || 18)}px`);
   document.body.classList.toggle("reduced-motion", state.settings.motion === "reduced");
   $("#bgUrlInput").value = state.settings.bgUrl || "";
-  $("#glassRange").value = state.settings.glass || 20;
+  $("#glassRange").value = state.settings.glass || 18;
   $("#profileNameInput") && ($("#profileNameInput").value = state.profileName || "");
   $$(".segmented button").forEach(btn => btn.classList.toggle("active", btn.dataset.motion === state.settings.motion));
+}
+
+async function loadSavedBackground() {
+  try {
+    const blob = await getAsset("background");
+    if (!blob) return;
+    if (backgroundObjectUrl) URL.revokeObjectURL(backgroundObjectUrl);
+    backgroundObjectUrl = URL.createObjectURL(blob);
+    $("#backgroundImage").style.backgroundImage = `url("${backgroundObjectUrl}")`;
+  } catch {}
+}
+
+function openAssetDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(BG_DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(BG_STORE)) db.createObjectStore(BG_STORE);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function putAsset(key, value) {
+  const db = await openAssetDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BG_STORE, "readwrite");
+    tx.objectStore(BG_STORE).put(value, key);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+}
+
+async function getAsset(key) {
+  const db = await openAssetDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BG_STORE, "readonly");
+    const request = tx.objectStore(BG_STORE).get(key);
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+async function clearStoredBackground() {
+  const db = await openAssetDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BG_STORE, "readwrite");
+    tx.objectStore(BG_STORE).delete("background");
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+}
+
+async function handleBackgroundFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return toast("Choose an image file.");
+  if (file.size > 8 * 1024 * 1024) return toast("Image must be 8 MB or smaller.");
+  selectedBackgroundFile = file;
+  try {
+    await putAsset("background", file);
+    state.settings.bgMode = "file";
+    state.settings.bgUrl = "";
+    saveState();
+    if (backgroundObjectUrl) URL.revokeObjectURL(backgroundObjectUrl);
+    backgroundObjectUrl = URL.createObjectURL(file);
+    $("#backgroundImage").style.backgroundImage = `url("${backgroundObjectUrl}")`;
+    const label = $("#bgFileName");
+    if (label) label.textContent = file.name;
+    toast("Background image saved.");
+  } catch {
+    toast("Couldn't save that image.");
+  }
+}
+
+async function clearBackgroundFile() {
+  try { await clearStoredBackground(); } catch {}
+  selectedBackgroundFile = null;
+  if (backgroundObjectUrl) {
+    URL.revokeObjectURL(backgroundObjectUrl);
+    backgroundObjectUrl = null;
+  }
+  state.settings.bgMode = "";
+  saveState();
+  applySettings();
+  const label = $("#bgFileName");
+  if (label) label.textContent = "No file selected";
+  toast("Custom background cleared.");
 }
 
 function saveSettings() {
@@ -199,6 +299,10 @@ function saveSettings() {
   }
   state.settings.bgUrl = $("#bgUrlInput").value.trim();
   state.settings.glass = Number($("#glassRange").value);
+  if (state.settings.bgUrl) {
+    state.settings.bgMode = "url";
+    clearStoredBackground().catch(() => {});
+  }
   state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
   saveState();
   applySettings();
@@ -490,12 +594,17 @@ function playTrack(track, remember = true) {
     state.recent = [track, ...state.recent.filter(x => x.id !== track.id)].slice(0, 50);
     saveState();
   }
-  if (!state.ytReady || !state.yt) {
+
+  const player = ensureYouTubePlayer();
+  if (!player) {
     toast("YouTube player is still loading.");
     return;
   }
-  state.yt.loadVideoById(track.id);
+  if (state.ytReady) {
+    state.yt.loadVideoById(track.id);
+  }
 }
+
 
 function playRelative(delta) {
   if (!state.queue.length) return;
@@ -521,46 +630,59 @@ function togglePlay() {
     else toast("Search for a song first.");
     return;
   }
-  if (!state.yt) return;
-  const playerState = state.yt.getPlayerState?.();
-  if (playerState === 1) state.yt.pauseVideo();
-  else state.yt.playVideo();
+  const player = ensureYouTubePlayer();
+  if (!player) return;
+  const playerState = player.getPlayerState?.();
+  if (playerState === 1) player.pauseVideo();
+  else player.playVideo();
 }
 
 function setupYouTube() {
   window.onYouTubeIframeAPIReady = () => {
-    state.yt = new YT.Player("yt-player", {
-      width: "480",
-      height: "270",
-      host: "https://www.youtube-nocookie.com",
-      playerVars: {
-        playsinline: 1,
-        controls: 1,
-        rel: 0,
-        origin: window.location.origin,
-        enablejsapi: 1,
-        widget_referrer: window.location.href
-      },
-      events: {
-        onReady: () => {
-          state.ytReady = true;
-          state.yt.setVolume(Number($("#volumeBar").value));
-          syncProgress();
-        },
-        onStateChange: onYTStateChange,
-        onError: () => toast("YouTube couldn't play this video.")
-      }
-    });
+    state.ytApiReady = true;
+    if (state.current) ensureYouTubePlayer();
   };
 }
+
+function ensureYouTubePlayer() {
+  if (state.yt || !window.YT?.Player) return state.yt;
+  $("#yt-container").classList.add("ready");
+  state.yt = new YT.Player("yt-player", {
+    width: "480",
+    height: "270",
+    host: "https://www.youtube-nocookie.com",
+    playerVars: {
+      playsinline: 1,
+      controls: 1,
+      rel: 0,
+      origin: window.location.origin,
+      enablejsapi: 1,
+      widget_referrer: window.location.href
+    },
+    events: {
+      onReady: () => {
+        state.ytReady = true;
+        state.yt.setVolume(Number($("#volumeBar").value));
+        if (state.current) state.yt.loadVideoById(state.current.id);
+      },
+      onStateChange: onYTStateChange,
+      onError: () => toast("YouTube couldn't play this video.")
+    }
+  });
+  return state.yt;
+}
+
 
 function onYTStateChange(event) {
   const states = window.YT?.PlayerState;
   if (!states) return;
   if (event.data === states.PLAYING) {
     $("#playBtn").textContent = "Ⅱ";
+    syncProgress();
   } else {
     $("#playBtn").textContent = "▶";
+    if (progressTimer) cancelAnimationFrame(progressTimer);
+    progressTimer = 0;
   }
   if (event.data === states.ENDED) {
     if (state.repeated && state.current) {
@@ -572,15 +694,26 @@ function onYTStateChange(event) {
 }
 
 function syncProgress() {
-  setInterval(() => {
-    if (!state.yt?.getCurrentTime) return;
+  if (progressTimer) return;
+  const tick = () => {
+    if (!state.yt?.getCurrentTime) {
+      progressTimer = 0;
+      return;
+    }
     const duration = state.yt.getDuration?.() || 0;
     const current = state.yt.getCurrentTime?.() || 0;
     $("#currentTime").textContent = formatTime(current);
     $("#duration").textContent = formatTime(duration);
     $("#progressBar").value = duration ? (current / duration) * 100 : 0;
-  }, 500);
+    if (state.yt.getPlayerState?.() === 1) {
+      progressTimer = requestAnimationFrame(tick);
+    } else {
+      progressTimer = 0;
+    }
+  };
+  progressTimer = requestAnimationFrame(tick);
 }
+
 
 function updatePlayerUI() {
   const track = state.current;
@@ -896,32 +1029,7 @@ function updateRoute(view) {
 }
 
 function addProfessionalInteractions() {
-  document.addEventListener("pointermove", event => {
-    document.documentElement.style.setProperty("--mx", event.clientX + "px");
-    document.documentElement.style.setProperty("--my", event.clientY + "px");
-  }, { passive: true });
-
-  $$(".tilt-card, .discover-card").forEach(card => {
-    card.addEventListener("pointermove", event => {
-      if (document.body.classList.contains("reduced-motion")) return;
-      const rect = card.getBoundingClientRect();
-      const x = (event.clientX - rect.left) / rect.width - .5;
-      const y = (event.clientY - rect.top) / rect.height - .5;
-      card.style.transform = "perspective(900px) rotateX(" + (-y*4).toFixed(2) + "deg) rotateY(" + (x*5).toFixed(2) + "deg) translateY(-3px)";
-    });
-    card.addEventListener("pointerleave", () => { card.style.transform = ""; });
-  });
-
-  $$(".magnetic").forEach(button => {
-    button.addEventListener("pointermove", event => {
-      if (document.body.classList.contains("reduced-motion")) return;
-      const rect = button.getBoundingClientRect();
-      const x = event.clientX - (rect.left + rect.width / 2);
-      const y = event.clientY - (rect.top + rect.height / 2);
-      button.style.transform = "translate(" + (x*.055).toFixed(2) + "px," + (y*.055).toFixed(2) + "px)";
-    });
-    button.addEventListener("pointerleave", () => { button.style.transform = ""; });
-  });
+  // CSS handles hover and motion; keep JS off the hot path.
 }
 
 function enhanceNavigation() {
@@ -970,7 +1078,7 @@ function enhanceShortcuts() {
 }
 
 function enhanceFirstRun() {
-  if (!state.profileName) window.setTimeout(openFirstRun, 500);
+  if (!state.profileName) window.setTimeout(openFirstRun, 350);
   $("#saveProfile")?.addEventListener("click", saveLocalProfile);
   $("#firstRunName")?.addEventListener("keydown", event => {
     if (event.key === "Enter") {
