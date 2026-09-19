@@ -1704,7 +1704,7 @@ function renderLibrary(tab) {
       `).join("")}</div>`
     : `<div class="empty-state glass"><div class="empty-icon">＋</div><h3>No playlists yet.</h3><p>Create a playlist from the + button.</p></div>`;
 
-  $("[data-open-library-playlist]", host).forEach(btn =>
+  $$("[data-open-library-playlist]", host).forEach(btn =>
     btn.addEventListener("click", () => openPlaylist(btn.dataset.openLibraryPlaylist))
   );
 }
@@ -1740,24 +1740,24 @@ function renderLocalAudioLibrary(host) {
       : `<div class="empty-state glass local-library-empty"><div class="empty-icon">♪</div><h3>No local audio yet.</h3><p>Import audio files you already have on this device, then add them to any playlist.</p><button class="ghost-button" id="libraryImportLocalAudioEmpty" type="button">Import audio</button></div>`}
   `;
 
-  const importButtons = $("#libraryImportLocalAudio, #libraryImportLocalAudioEmpty", host);
+  const importButtons = $$("#libraryImportLocalAudio, #libraryImportLocalAudioEmpty", host);
   importButtons.forEach(btn => btn.addEventListener("click", () => $("#localAudioInput")?.click()));
 
   const localMap = new Map(tracks.map(track => [track.id, track]));
 
-  $("[data-local-play]", host).forEach(btn => btn.addEventListener("click", () => {
+  $$("[data-local-play]", host).forEach(btn => btn.addEventListener("click", () => {
     const track = localMap.get(btn.dataset.localPlay);
     if (!track) return;
     setQueue(tracks, tracks.findIndex(x => x.id === track.id));
     playTrack(track);
   }));
 
-  $("[data-local-add]", host).forEach(btn => btn.addEventListener("click", () => {
+  $$("[data-local-add]", host).forEach(btn => btn.addEventListener("click", () => {
     const track = localMap.get(btn.dataset.localAdd);
     if (track) openAddToPlaylist(track);
   }));
 
-  $("[data-local-remove]", host).forEach(btn => btn.addEventListener("click", async () => {
+  $$("[data-local-remove]", host).forEach(btn => btn.addEventListener("click", async () => {
     const track = localMap.get(btn.dataset.localRemove);
     if (track) await removeLocalAudio(track);
   }));
