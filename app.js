@@ -37,7 +37,7 @@ let state = {
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
-const $ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 let progressTimer = 0;
 let backgroundObjectUrl = null;
