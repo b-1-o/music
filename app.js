@@ -118,8 +118,15 @@ function init() {
 }
 
 function bindEvents() {
-  $$(".nav-item[data-view]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.view)));
+  $(".nav-item[data-view]").forEach(btn => btn.addEventListener("click", () => {
+    if (btn.dataset.view === "search") {
+      resetSearchView();
+      $("#searchInput")?.focus();
+    }
+    showView(btn.dataset.view);
+  }));
   $("#startSearching")?.addEventListener("click", () => {
+    resetSearchView();
     showView("search");
     $("#searchInput")?.focus();
   });
@@ -311,6 +318,16 @@ function bindEvents() {
     $$(".segmented button").forEach(x => x.classList.remove("active"));
     btn.classList.add("active");
   }));
+}
+
+function resetSearchView() {
+  const top = $("#searchInput");
+  const panel = $("#searchPanelInput");
+  const results = $("#searchResults");
+  if (top) top.value = "";
+  if (panel) panel.value = "";
+  if (results) results.innerHTML = "";
+  $("#searchView")?.classList.remove("search-has-results");
 }
 
 function showView(view) {
@@ -570,7 +587,12 @@ function renderSidebar() {
       <span>${escapeHTML(pl.name)}</span>
     </button>
   `).join("");
-  $$(".sidebar-playlist", host).forEach(btn => btn.addEventListener("click", () => openPlaylist(btn.dataset.playlist)));
+  $(".sidebar-playlist", host).forEach(btn => btn.addEventListener("click", () => {
+    $(".sidebar-playlist", host).forEach(x => x.classList.remove("is-selected"));
+    btn.classList.add("is-selected", "is-switching");
+    window.setTimeout(() => btn.classList.remove("is-switching"), 360);
+    openPlaylist(btn.dataset.playlist);
+  }));
 }
 
 function renderPlaylists() {
@@ -1291,9 +1313,15 @@ function addToPlaylist(id, track) {
 function openPlaylist(id) {
   const pl = state.playlists.find(x => x.id === id);
   if (!pl) return;
-  $$(".view").forEach(x => x.classList.remove("active"));
-  $("#playlistView").classList.add("active");
-  $$(".nav-item[data-view]").forEach(x => x.classList.remove("active"));
+  $(".view").forEach(x => x.classList.remove("active"));
+  const view = $("#playlistView");
+  view.classList.add("active", "playlist-switching");
+  view.style.setProperty("--playlist-switch-index", String(Math.max(0, state.playlists.indexOf(pl))));
+  window.clearTimeout(view.__playlistSwitchTimer);
+  view.__playlistSwitchTimer = window.setTimeout(() => {
+    view.classList.remove("playlist-switching");
+  }, 520);
+  $(".nav-item[data-view]").forEach(x => x.classList.remove("active"));
   renderPlaylistPage(pl);
 }
 
@@ -1608,7 +1636,10 @@ function enhanceShortcuts() {
 
     if (event.key === "/" && !typing) { event.preventDefault(); $("#searchInput")?.focus(); showView("search"); }
     if (event.key.toLowerCase() === "h" && !typing) showView("home");
-    if (event.key.toLowerCase() === "s" && !typing) showView("search");
+    if (event.key.toLowerCase() === "s" && !typing) {
+      resetSearchView();
+      showView("search");
+    }
     if (event.key.toLowerCase() === "l" && !typing) showView("library");
     if (event.key === "Escape") {
       if (document.body.classList.contains("player-expanded")) {
