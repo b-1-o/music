@@ -1791,3 +1791,98 @@ body:has(#homeView.active){
     display:none!important;
   }
 }
+
+
+/* === LOCAL AUDIO LIBRARY === */
+.local-library-head{
+  margin:0 7vw 14px;
+  padding:14px 16px;
+  border-radius:17px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+}
+.local-library-head h3{
+  margin:8px 0 4px;
+  font-size:24px;
+  letter-spacing:-.045em;
+}
+.local-library-head p{
+  margin:0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.55;
+}
+.local-audio-list{margin-top:0}
+.local-audio-row{
+  grid-template-columns:48px minmax(0,1fr) 70px 70px auto;
+}
+.local-audio-thumb{
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,rgba(231,175,199,.18),rgba(255,255,255,.03));
+  color:var(--pink);
+  font-size:18px;
+}
+.local-audio-empty{margin-top:0}
+.local-audio-row .track-main strong{
+  font-size:11px;
+}
+.local-audio-row .track-actions{
+  gap:4px;
+}
+.local-audio-row .track-action{
+  flex:none;
+}
+@media(max-width:850px){
+  .local-library-head{
+    margin-left:24px;
+    margin-right:24px;
+  }
+  .local-audio-row{
+    grid-template-columns:48px minmax(0,1fr) auto;
+  }
+  .local-audio-row .track-artist,
+  .local-audio-row .track-duration{
+    display:none;
+  }
+}
+@media(max-width:620px){
+  .local-library-head{
+    margin:0 14px 12px;
+    padding:13px;
+    flex-direction:column;
+    align-items:stretch;
+    border-radius:16px;
+  }
+  .local-library-head .primary-button{
+    width:100%;
+  }
+  .local-library-head h3{
+    font-size:21px;
+  }
+  .local-audio-row{
+    grid-template-columns:42px minmax(0,1fr) auto;
+    gap:8px;
+    padding:7px;
+  }
+  .local-audio-thumb{
+    width:42px;
+    height:42px;
+    border-radius:10px;
+  }
+  .local-audio-row .track-actions{
+    flex-direction:row;
+  }
+  .local-audio-row .track-action{
+    width:31px;
+    height:31px;
+  }
+  .local-audio-row .track-main strong{
+    font-size:10px;
+  }
+  .local-audio-row .track-main span{
+    font-size:8px;
+  }
+}
