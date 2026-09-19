@@ -287,7 +287,7 @@ function applySettings() {
   root.style.setProperty("--theme-background", s.backgroundColor || "#070707");
   root.style.setProperty("--bg-image-opacity", "1");
   root.style.setProperty("--bg-image-blur", "0px");
-  root.style.setProperty("--blur", `${Math.min(24, Number(s.glass) || 0)}px`);
+  root.style.setProperty("--glass-blur", `${Math.max(0, Math.min(35, Number(s.glass) || 0))}px`);
   document.body.classList.toggle("reduced-motion", s.motion === "reduced");
   document.body.classList.toggle("no-bg-color", s.bgColorEnabled === false);
   if ($("#bgColorEnabled")) $("#bgColorEnabled").checked = s.bgColorEnabled !== false;
@@ -520,8 +520,15 @@ function renderPlaylists() {
 
   function render() {
     const width = host.clientWidth;
-    const step = width < 680 ? 250 : width < 1000 ? 300 : 330;
     const total = buttons.length;
+    const cardWidth = Math.round(Math.min(286, Math.max(220, width * 0.34)));
+    const cardHeight = Math.round(cardWidth * 1.405);
+    const step = Math.max(118, Math.min(330, (width - cardWidth) / 2 - 8));
+    buttons.forEach(button => {
+      button.style.width = cardWidth + "px";
+      button.style.height = cardHeight + "px";
+      button.style.margin = (-cardHeight / 2) + "px 0 0 " + (-cardWidth / 2) + "px";
+    });
 
     phase += (target - phase) * 0.14;
     if (Math.abs(target - phase) < 0.0005) phase = target;
@@ -617,7 +624,10 @@ function renderPlaylists() {
     if (Math.abs(dx) > 8) drag.moved = true;
     if (drag.moved) {
       event.preventDefault();
-      target = drag.startTarget - dx / 245;
+      const width = host.clientWidth;
+      const cardWidth = Math.round(Math.min(286, Math.max(220, width * 0.34)));
+      const step = Math.max(118, Math.min(330, (width - cardWidth) / 2 - 8));
+      target = drag.startTarget - dx / step;
       requestRender();
     }
   };
@@ -1351,7 +1361,7 @@ function toast(message) {
 function safeUrl(url) {
   try {
     const u = new URL(url, location.href);
-    if (u.protocol === "https:" || u.protocol === "http:") return u.href;
+    if (u.protocol === "https:" || u.protocol === "http:" || u.protocol === "blob:") return u.href;
   } catch {}
   return "";
 }
