@@ -33,6 +33,9 @@ let state = {
     backgroundColor: "#070707",
     bgOpacity: 100,
     bgBlur: 0,
+    glass: 16,
+    carouselOpacity: 100,
+    carouselBlur: 0,
     bgColorEnabled: true
   }),
   current: null,
@@ -86,6 +89,9 @@ function init() {
     backgroundColor: "#070707",
     bgOpacity: 100,
     bgBlur: 0,
+    glass: 16,
+    carouselOpacity: 100,
+    carouselBlur: 0,
     bgColorEnabled: true,
     ...state.settings
   };
@@ -157,6 +163,18 @@ function bindEvents() {
     state.settings.glass = value;
     const label = $("#glassValue");
     if (label) label.textContent = value + "px";
+    applySettings();
+  });
+  $("#carouselOpacityRange")?.addEventListener("input", e => {
+    const value = Number(e.target.value);
+    state.settings.carouselOpacity = value;
+    if ($("#carouselOpacityValue")) $("#carouselOpacityValue").textContent = value + "%";
+    applySettings();
+  });
+  $("#carouselBlurRange")?.addEventListener("input", e => {
+    const value = Number(e.target.value);
+    state.settings.carouselBlur = value;
+    if ($("#carouselBlurValue")) $("#carouselBlurValue").textContent = value + "px";
     applySettings();
   });
   $("#bgBlurRange")?.addEventListener("input", e => {
@@ -269,6 +287,15 @@ function showView(view) {
   $$(".nav-item[data-view]").forEach(x => x.classList.toggle("active", x.dataset.view === view));
   $(".sidebar").classList.remove("open");
   $(".overlay").style.display = "none";
+  const searchInput = $("#searchInput");
+  if (searchInput) {
+    if (view === "home") {
+      searchInput.value = "";
+      searchInput.placeholder = "";
+    } else if (view === "search") {
+      searchInput.placeholder = "Search songs, artists, videos...";
+    }
+  }
   if (view === "search") renderSearchStatus();
   if (view === "library") renderLibrary("liked");
 }
@@ -292,9 +319,11 @@ function applySettings() {
   root.style.setProperty("--theme-accent", s.accentColor || "#c8c8c8");
   root.style.setProperty("--theme-surface", s.surfaceColor || "#111111");
   root.style.setProperty("--theme-background", s.backgroundColor || "#070707");
-  root.style.setProperty("--bg-image-opacity", "1");
-  root.style.setProperty("--bg-image-blur", "0px");
-  root.style.setProperty("--glass-blur", `${Math.max(0, Math.min(35, Number(s.glass) || 0))}px`);
+  root.style.setProperty("--bg-image-opacity", String(Math.max(0, Math.min(100, Number(s.bgOpacity ?? 100))) / 100));
+  root.style.setProperty("--bg-image-blur", `${Math.max(0, Math.min(24, Number(s.bgBlur ?? 0)))}px`);
+  root.style.setProperty("--glass-blur", `${Math.max(0, Math.min(35, Number(s.glass ?? 16)))}px`);
+  root.style.setProperty("--carousel-opacity", String(Math.max(20, Math.min(100, Number(s.carouselOpacity ?? 100))) / 100));
+  root.style.setProperty("--carousel-blur", `${Math.max(0, Math.min(18, Number(s.carouselBlur ?? 0)))}px`);
   document.body.classList.toggle("reduced-motion", s.motion === "reduced");
   document.body.classList.toggle("no-bg-color", s.bgColorEnabled === false);
   if ($("#bgColorEnabled")) $("#bgColorEnabled").checked = s.bgColorEnabled !== false;
@@ -311,15 +340,19 @@ function applySettings() {
   setValue("bgUrlInput", s.bgUrl || "");
   setValue("glassRange", s.glass ?? 16);
   if ($("#glassValue")) $("#glassValue").textContent = `${s.glass ?? 16}px`;
-  setValue("bgOpacityRange", 100);
-  setValue("bgBlurRange", 0);
+  setValue("bgOpacityRange", s.bgOpacity ?? 100);
+  setValue("bgBlurRange", s.bgBlur ?? 0);
+  setValue("carouselOpacityRange", s.carouselOpacity ?? 100);
+  setValue("carouselBlurRange", s.carouselBlur ?? 0);
   setValue("primaryColor", s.primaryColor || "#e7e7e7");
   setValue("secondaryColor", s.secondaryColor || "#8f8f8f");
   setValue("accentColor", s.accentColor || "#c8c8c8");
   setValue("surfaceColor", s.surfaceColor || "#111111");
   setValue("backgroundColor", s.backgroundColor || "#070707");
-  if ($("#bgOpacityValue")) $("#bgOpacityValue").textContent = "100%";
-  if ($("#bgBlurValue")) $("#bgBlurValue").textContent = "0px";
+  if ($("#bgOpacityValue")) $("#bgOpacityValue").textContent = `${s.bgOpacity ?? 100}%`;
+  if ($("#bgBlurValue")) $("#bgBlurValue").textContent = `${s.bgBlur ?? 0}px`;
+  if ($("#carouselOpacityValue")) $("#carouselOpacityValue").textContent = `${s.carouselOpacity ?? 100}%`;
+  if ($("#carouselBlurValue")) $("#carouselBlurValue").textContent = `${s.carouselBlur ?? 0}px`;
   if ($("#profileNameInput")) $("#profileNameInput").value = state.profileName || "";
   $$(".segmented button").forEach(btn => btn.classList.toggle("active", btn.dataset.motion === s.motion));
   updateThemeMeta();
@@ -444,8 +477,10 @@ function saveSettings() {
   state.settings.surfaceColor = value("surfaceColor") || "#111111";
   state.settings.backgroundColor = value("backgroundColor") || "#070707";
   state.settings.bgUrl = (value("bgUrlInput") || "").trim();
-  state.settings.bgOpacity = 100;
-  state.settings.bgBlur = 0;
+  state.settings.bgOpacity = Number(value("bgOpacityRange") ?? 100);
+  state.settings.bgBlur = Number(value("bgBlurRange") ?? 0);
+  state.settings.carouselOpacity = Number(value("carouselOpacityRange") ?? 100);
+  state.settings.carouselBlur = Number(value("carouselBlurRange") ?? 0);
   state.settings.bgColorEnabled = !!$("#bgColorEnabled")?.checked;
   state.settings.glass = Number(value("glassRange") || 16);
   state.settings.motion = $(".segmented button.active")?.dataset.motion || "full";
@@ -462,7 +497,7 @@ function saveSettings() {
 }
 
 function resetAppearance() {
-  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:100, bgBlur:0, bgColorEnabled:true };
+  state.settings = { ...state.settings, bgUrl:"", bgMode:"", glass:16, carouselOpacity:100, carouselBlur:0, motion:"full", primaryColor:"#e7e7e7", secondaryColor:"#8f8f8f", accentColor:"#c8c8c8", surfaceColor:"#111111", backgroundColor:"#070707", bgOpacity:100, bgBlur:0, bgColorEnabled:true };
   clearStoredBackground().catch(() => {});
   if (backgroundObjectUrl) { URL.revokeObjectURL(backgroundObjectUrl); backgroundObjectUrl = null; }
   saveState();
@@ -833,7 +868,7 @@ async function searchYouTube(query) {
   showView("search");
   renderSearchStatus();
   const host = $("#searchResults");
-  host.innerHTML = `<div class="empty-state glass"><div class="empty-icon">⋯</div><h3>Searching.</h3><p>Looking through YouTube…</p></div>`;
+  host.innerHTML = `<div class="search-loading"><span></span><span></span><span></span></div>`;
   if (!state.apiKey) {
     if (localStorage.getItem("b1api_first_run_seen") === "1") openApiDialog();
     else openFirstRun();
@@ -878,10 +913,10 @@ function renderResults(results) {
     return;
   }
 
-  host.innerHTML = results.map(track => {
+  host.innerHTML = results.map((track, index) => {
     const liked = state.liked.some(x => x.id === track.id);
     return `
-      <article class="result-card">
+      <article class="result-card" style="--item-index:${index}">
         <div class="result-thumb">
           <img loading="lazy" src="${safeUrl(track.thumbnail)}" alt="">
           <button class="play-overlay" data-play="${track.id}">▶</button>
