@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#09090b" />
+  <title>FOG — Music</title>
+  <meta name="description" content="A glassmorphism music player with local playlists." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <div class="background-image" id="backgroundImage"></div>
+  <div class="grain"></div>
+
+  <div class="app-shell">
+    <aside class="sidebar glass">
+      <div class="brand">FOG<span>.</span></div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="home"><span>⌂</span> Home</button>
+        <button class="nav-item" data-view="search"><span>⌕</span> Search</button>
+        <button class="nav-item" data-view="library"><span>▣</span> Library</button>
+      </nav>
+
+      <div class="sidebar-title">
+        <span>PLAYLISTS</span>
+        <button id="newPlaylistBtn" class="icon-button" aria-label="New playlist">+</button>
+      </div>
+      <div id="sidebarPlaylists" class="sidebar-playlists"></div>
+
+      <div class="sidebar-bottom">
+        <button class="nav-item subtle" id="settingsBtn"><span>⚙</span> Settings</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar glass">
+        <button class="mobile-menu" id="mobileMenuBtn">☰</button>
+        <div class="top-search" id="topSearch">
+          <span>⌕</span>
+          <input id="searchInput" type="search" autocomplete="off" placeholder="Search songs, artists, videos..." />
+          <kbd>ENTER</kbd>
+        </div>
+        <div class="top-actions">
+          <button class="round-button" id="backgroundBtn" aria-label="Change background">✦</button>
+          <button class="round-button" id="apiBtn" aria-label="Configure YouTube API">API</button>
+        </div>
+      </header>
+
+      <section id="homeView" class="view active">
+        <div class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow">YOUR SPACE · NO ACCOUNT</div>
+            <h1>Music that<br><em>stays yours.</em></h1>
+            <p>Search YouTube, build playlists, and keep your library in this browser.</p>
+            <div class="hero-actions">
+              <button class="primary-button" id="startSearching">Start searching <span>↗</span></button>
+              <button class="ghost-button" id="scrollPlaylists">Browse playlists</button>
+            </div>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">LOCAL LIBRARY</span>
+              <h2>Your playlists</h2>
+            </div>
+            <button class="text-button" id="seeAllPlaylists">See all <span>→</span></button>
+          </div>
+          <div id="playlistCarousel" class="playlist-carousel"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">DISCOVER</span>
+              <h2>Start with a search</h2>
+            </div>
+          </div>
+          <div class="discover-grid">
+            <button class="discover-card glass" data-search="Kai Angel">
+              <span class="discover-art art-one">KA</span>
+              <span><strong>Kai Angel</strong><small>Search the artist</small></span>
+              <span class="arrow">↗</span>
+            </button>
+            <button class="discover-card glass" data-search="fakemink">
+              <span class="discover-art art-two">FM</span>
+              <span><strong>fakemink</strong><small>Search the artist</small></span>
+              <span class="arrow">↗</span>
+            </button>
+            <button class="discover-card glass" data-search="new music 2026">
+              <span class="discover-art art-three">26</span>
+              <span><strong>New music</strong><small>Find recent uploads</small></span>
+              <span class="arrow">↗</span>
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <section id="searchView" class="view">
+        <div class="page-head">
+          <div>
+            <span class="eyebrow">SEARCH</span>
+            <h2>Find something.</h2>
+          </div>
+          <div class="search-status" id="searchStatus">Connect a YouTube API key to search.</div>
+        </div>
+        <div id="searchResults" class="results-grid">
+          <div class="empty-state glass">
+            <div class="empty-icon">⌕</div>
+            <h3>Your results will land here.</h3>
+            <p>Press API to add a YouTube Data API key, then search from the bar above.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="libraryView" class="view">
+        <div class="page-head">
+          <div>
+            <span class="eyebrow">LIBRARY</span>
+            <h2>Saved on this browser.</h2>
+          </div>
+        </div>
+
+        <div class="library-tabs glass">
+          <button class="library-tab active" data-library-tab="liked">Liked songs <span id="likedCount">0</span></button>
+          <button class="library-tab" data-library-tab="recent">Recently played <span id="recentCount">0</span></button>
+          <button class="library-tab" data-library-tab="all">All playlists</button>
+        </div>
+
+        <div id="libraryContent"></div>
+      </section>
+
+      <section id="playlistView" class="view">
+        <button id="backFromPlaylist" class="back-button">← Library</button>
+        <div id="playlistHero"></div>
+        <div id="playlistTracks"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="player glass" id="playerBar">
+    <div class="now-playing">
+      <div class="now-art" id="nowArt"><span>♪</span></div>
+      <div class="now-copy">
+        <strong id="nowTitle">Nothing playing</strong>
+        <span id="nowArtist">Choose a track to begin</span>
+      </div>
+      <button class="heart-button" id="likeCurrent" aria-label="Like current track">♡</button>
+    </div>
+
+    <div class="player-controls">
+      <div class="transport">
+        <button id="shuffleBtn" class="control-button" aria-label="Shuffle">⤨</button>
+        <button id="prevBtn" class="control-button" aria-label="Previous">◀</button>
+        <button id="playBtn" class="play-button" aria-label="Play">▶</button>
+        <button id="nextBtn" class="control-button" aria-label="Next">▶</button>
+        <button id="repeatBtn" class="control-button" aria-label="Repeat">↻</button>
+      </div>
+      <div class="progress-row">
+        <span id="currentTime">0:00</span>
+        <input id="progressBar" type="range" min="0" max="100" value="0" />
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="player-side">
+      <button class="control-button" id="queueBtn" aria-label="Queue">☷</button>
+      <button class="control-button" id="volumeBtn" aria-label="Mute">◖</button>
+      <input id="volumeBar" class="volume" type="range" min="0" max="100" value="70" />
+      <button class="expand-button" id="expandPlayer">⤢</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <dialog id="settingsDialog" class="modal glass">
+    <div class="modal-head">
+      <div>
+        <span class="eyebrow">SETTINGS</span>
+        <h3>Make it yours.</h3>
+      </div>
+      <button class="icon-button" data-close-dialog="settingsDialog">×</button>
+    </div>
+
+    <div class="setting-block">
+      <label>Background image URL</label>
+      <input id="bgUrlInput" class="text-input" placeholder="https://..." />
+      <small>Saved locally. Use an image you have permission to use.</small>
+    </div>
+
+    <div class="setting-block">
+      <label>Glass intensity</label>
+      <input id="glassRange" type="range" min="10" max="35" value="20" />
+    </div>
+
+    <div class="setting-block">
+      <label>Motion</label>
+      <div class="segmented">
+        <button data-motion="full" class="active">Full</button>
+        <button data-motion="reduced">Reduced</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="ghost-button" data-close-dialog="settingsDialog">Cancel</button>
+      <button class="primary-button" id="saveSettings">Save settings</button>
+    </div>
+  </dialog>
+
+  <dialog id="apiDialog" class="modal glass">
+    <div class="modal-head">
+      <div>
+        <span class="eyebrow">YOUTUBE DATA API</span>
+        <h3>Connect search.</h3>
+      </div>
+      <button class="icon-button" data-close-dialog="apiDialog">×</button>
+    </div>
+
+    <p class="modal-copy">This app keeps the key in this browser only. For a public deployment, restrict the key to your site origin in Google Cloud.</p>
+    <div class="setting-block">
+      <label>YouTube Data API v3 key</label>
+      <input id="apiKeyInput" class="text-input" type="password" placeholder="Paste API key" />
+    </div>
+
+    <div class="api-help">
+      <strong>Setup</strong>
+      <span>Create a Google Cloud project → enable YouTube Data API v3 → create an API key → restrict it to your GitHub Pages domain.</span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="danger-button" id="clearApi">Clear key</button>
+      <button class="primary-button" id="saveApi">Save key</button>
+    </div>
+  </dialog>
+
+  <dialog id="playlistDialog" class="modal glass">
+    <div class="modal-head">
+      <div>
+        <span class="eyebrow">PLAYLIST</span>
+        <h3>New playlist.</h3>
+      </div>
+      <button class="icon-button" data-close-dialog="playlistDialog">×</button>
+    </div>
+    <div class="setting-block">
+      <label>Name</label>
+      <input id="playlistNameInput" class="text-input" maxlength="40" placeholder="Night Drive" />
+    </div>
+    <div class="modal-actions">
+      <button class="ghost-button" data-close-dialog="playlistDialog">Cancel</button>
+      <button class="primary-button" id="createPlaylist">Create playlist</button>
+    </div>
+  </dialog>
+
+  <dialog id="queueDialog" class="modal glass queue-modal">
+    <div class="modal-head">
+      <div>
+        <span class="eyebrow">QUEUE</span>
+        <h3>Up next.</h3>
+      </div>
+      <button class="icon-button" data-close-dialog="queueDialog">×</button>
+    </div>
+    <div id="queueContent" class="queue-content"></div>
+  </dialog>
+
+  <div id="toast" class="toast glass"></div>
+
+  <div id="yt-container" class="youtube-host" aria-hidden="true">
+    <div id="yt-player"></div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
