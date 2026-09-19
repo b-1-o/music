@@ -578,6 +578,14 @@ input[type="range"][disabled]{opacity:.7;cursor:not-allowed}
 }
 
 
+/* Search transforms into a results-only stage after the first query */
+#searchView.search-has-results .search-panel{
+  display:none!important;
+}
+#searchView.search-has-results .search-results-clean{
+  padding-top:112px!important;
+}
+
 /* === CLEAN SEARCH + MOTION SYSTEM === */
 .view.active{
   animation:viewReveal .42s var(--ease) both;
