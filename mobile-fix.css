@@ -1,40 +1,85 @@
-/* mobile sidebar fix — loaded after styles.css */
+/* mobile sidebar — hard fix for touch / stacking */
 @media (max-width: 850px) {
+  /* Kill overlays that steal taps on iOS / WebView */
+  .grain,
+  body::before,
+  body::after {
+    display: none !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+  }
+
+  /* Do not trap fixed UI inside a low stacking context */
+  .app-shell {
+    position: relative !important;
+    z-index: auto !important;
+    isolation: auto !important;
+  }
+
+  :root {
+    --sidebar: 0px;
+  }
+
+  .main {
+    margin-left: 0 !important;
+  }
+
   .topbar {
-    z-index: 125 !important;
+    left: 10px !important;
+    right: 10px !important;
+    top: 10px !important;
+    z-index: 10050 !important;
+    pointer-events: auto !important;
+  }
+
+  /* Hamburger: fixed to viewport, always tappable */
+  #mobileMenuBtn,
+  .mobile-menu {
+    display: grid !important;
+    position: fixed !important;
+    left: 12px !important;
+    top: 18px !important;
+    width: 44px !important;
+    height: 44px !important;
+    place-items: center !important;
+    margin: 0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border-radius: 12px !important;
+    background: rgba(12, 13, 18, 0.92) !important;
+    color: #f0f0f2 !important;
+    z-index: 10060 !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
   }
 
   .sidebar {
+    position: fixed !important;
     left: 10px !important;
     top: 10px !important;
     bottom: 10px !important;
-    width: min(290px, 86vw) !important;
-    z-index: 130 !important;
-    transform: translate3d(-110%, 0, 0) !important;
+    width: min(300px, 88vw) !important;
+    z-index: 10040 !important;
+    transform: translate3d(-120%, 0, 0) !important;
     visibility: visible !important;
     pointer-events: none !important;
     opacity: 1 !important;
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
     will-change: transform;
   }
 
   .sidebar.open {
     transform: translate3d(0, 0, 0) !important;
     pointer-events: auto !important;
+    visibility: visible !important;
   }
 
-  .mobile-menu {
-    display: grid !important;
-    width: 38px !important;
-    height: 38px !important;
-    place-items: center !important;
-    border: 1px solid var(--line) !important;
-    border-radius: 10px !important;
-    color: var(--muted) !important;
-    position: relative !important;
-    z-index: 140 !important;
-    touch-action: manipulation !important;
-    -webkit-tap-highlight-color: transparent;
+  .sidebar.open .nav-item,
+  .sidebar.open .sidebar-playlist,
+  .sidebar.open .icon-button,
+  .sidebar.open button {
+    pointer-events: auto !important;
   }
 
   .overlay,
@@ -42,8 +87,9 @@
     display: none;
     position: fixed !important;
     inset: 0 !important;
-    z-index: 120 !important;
+    z-index: 10030 !important;
     background: rgba(0, 0, 0, 0.55) !important;
+    pointer-events: auto !important;
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent;
   }
@@ -55,6 +101,11 @@
 
   body.sidebar-open {
     overflow: hidden !important;
+    touch-action: none;
+  }
+
+  .player {
+    z-index: 10020 !important;
   }
 
   .top-search input,
@@ -75,7 +126,6 @@
   }
 }
 
-/* Hide non-essential topbar actions */
 #backgroundBtn,
 #apiBtn {
   display: none !important;
