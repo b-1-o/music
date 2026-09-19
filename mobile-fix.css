@@ -1,4 +1,4 @@
-/* mobile sidebar — overlay must NOT cover the drawer */
+/* mobile-only — desktop unchanged (all rules behind max-width: 850px) */
 @media (max-width: 850px) {
   .grain,
   body::before,
@@ -32,6 +32,7 @@
     pointer-events: auto !important;
   }
 
+  /* Hamburger — same glass language as topbar */
   #mobileMenuBtn,
   .mobile-menu {
     display: grid !important;
@@ -42,10 +43,13 @@
     height: 44px !important;
     place-items: center !important;
     margin: 0 !important;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.1)) !important;
     border-radius: 12px !important;
-    background: rgba(12, 13, 18, 0.92) !important;
-    color: #f0f0f2 !important;
+    background: var(--panel, rgba(15, 17, 22, 0.72)) !important;
+    color: var(--text, #f0f0f2) !important;
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(var(--glass-blur, 16px)) saturate(115%) !important;
+    -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(115%) !important;
     z-index: 10060 !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
@@ -90,6 +94,7 @@
     z-index: 2 !important;
   }
 
+  /* Scrim only to the right of the drawer */
   .overlay,
   #overlay {
     display: none;
@@ -117,6 +122,7 @@
 
   .player {
     z-index: 10020 !important;
+    bottom: 74px !important;
   }
 
   .top-search input,
@@ -126,24 +132,13 @@
     line-height: 1.2 !important;
     -webkit-text-size-adjust: 100% !important;
   }
-}
 
-@media (max-width: 620px) {
-  .top-search input,
-  #searchInput,
-  #searchPanelInput {
-    font-size: 16px !important;
-    transform: none !important;
+  #backgroundBtn,
+  #apiBtn {
+    display: none !important;
   }
-}
 
-#backgroundBtn,
-#apiBtn {
-  display: none !important;
-}
-
-/* Bottom tab bar — open Search / Library without the drawer */
-@media (max-width: 850px) {
+  /* Bottom tabs — glass like player / topbar */
   .mobile-tab-bar {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr);
@@ -155,12 +150,20 @@
     height: 56px !important;
     padding: 4px !important;
     gap: 2px !important;
-    border: 1px solid rgba(255,255,255,.14) !important;
+    border: 1px solid var(--line, rgba(255, 255, 255, 0.1)) !important;
     border-radius: 16px !important;
-    background: rgba(10, 11, 16, 0.94) !important;
-    backdrop-filter: blur(16px) saturate(120%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
-    box-shadow: 0 12px 40px rgba(0,0,0,.45) !important;
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--theme-primary, #e7e7e7) 5%, transparent),
+        color-mix(in srgb, var(--theme-primary, #e7e7e7) 1.5%, transparent)
+      ),
+      var(--panel, rgba(15, 17, 22, 0.72)) !important;
+    box-shadow:
+      0 18px 50px rgba(0, 0, 0, 0.42),
+      inset 0 1px rgba(255, 255, 255, 0.07) !important;
+    backdrop-filter: blur(var(--glass-blur, 16px)) saturate(115%) !important;
+    -webkit-backdrop-filter: blur(var(--glass-blur, 16px)) saturate(115%) !important;
     pointer-events: auto !important;
   }
 
@@ -173,30 +176,50 @@
     border: 0 !important;
     border-radius: 12px !important;
     background: transparent !important;
-    color: rgba(255,255,255,.45) !important;
-    font: 600 9px system-ui, sans-serif !important;
+    color: var(--muted, rgba(255, 255, 255, 0.45)) !important;
+    font: 600 9px "DM Mono", system-ui, sans-serif !important;
+    letter-spacing: 0.02em !important;
     pointer-events: auto !important;
     touch-action: manipulation !important;
     -webkit-tap-highlight-color: transparent !important;
     cursor: pointer !important;
+    transition: background 0.18s ease, color 0.18s ease !important;
   }
 
-  .mobile-tab span { font-size: 16px !important; line-height: 1 !important; }
+  .mobile-tab span {
+    font-size: 16px !important;
+    line-height: 1 !important;
+  }
+
   .mobile-tab.active {
-    color: #fff !important;
-    background: rgba(255,255,255,.08) !important;
-  }
-
-  .player {
-    bottom: 74px !important;
+    color: var(--text, #fff) !important;
+    background: color-mix(in srgb, var(--theme-primary, #fff) 10%, transparent) !important;
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.06) !important;
   }
 
   body.sidebar-open .mobile-tab-bar {
-    opacity: 0.3;
+    opacity: 0.35;
     pointer-events: none !important;
   }
 }
 
+@media (max-width: 620px) {
+  .top-search input,
+  #searchInput,
+  #searchPanelInput {
+    font-size: 16px !important;
+    transform: none !important;
+  }
+}
+
+/* Desktop: never show mobile chrome */
 @media (min-width: 851px) {
-  .mobile-tab-bar { display: none !important; }
+  .mobile-tab-bar {
+    display: none !important;
+  }
+
+  #mobileMenuBtn,
+  .mobile-menu {
+    display: none !important;
+  }
 }
