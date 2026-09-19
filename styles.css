@@ -569,3 +569,10 @@ input[type="range"][disabled]{opacity:.7;cursor:not-allowed}
 @media(max-width:620px){
   .home-minimal-head{padding-left:14px!important;padding-right:14px!important}
 }
+
+
+/* Remove dark side shadows from the carousel */
+.playlist-carousel::after{
+  display:none!important;
+  background:none!important;
+}
