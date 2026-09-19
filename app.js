@@ -130,6 +130,7 @@ function bindEvents() {
     state.yt.seekTo((Number(e.target.value) / 100) * duration, true);
   });
   $("#expandPlayer").addEventListener("click", () => setExpandedPlayer(!document.body.classList.contains("player-expanded")));
+  $("#miniVideoExpand")?.addEventListener("click", () => setExpandedPlayer(true));
   $("#nowArt").addEventListener("click", () => {
     if (state.current) setExpandedPlayer(true);
   });
@@ -356,163 +357,103 @@ function renderSidebar() {
 
 function renderPlaylists() {
   const host = $("#playlistCarousel");
+  host.__b1apiCleanup?.();
   if (!state.playlists.length) {
-    host.innerHTML = "<div class=\"empty-state glass\"><h3>No playlists yet.</h3><p>Create one from the + button in the sidebar.</p></div>";
+    host.className = "playlist-carousel";
+    host.innerHTML = '<div class="empty-state glass"><h3>No playlists yet.</h3><p>Create one from the + button in the sidebar.</p></div>';
     return;
   }
-
-  host.classList.add("immersive-carousel");
-  host.innerHTML = state.playlists.map((pl, index) => {
-    const art = playlistArtwork(pl);
-    return `
-      <button class="playlist-card" data-playlist="${pl.id}" data-index="${index}">
-        <div class="playlist-art">${art}</div>
-        <span class="playlist-card-number">${String(index + 1).padStart(2, "0")}</span>
-        <div class="playlist-meta">
-          <small>PLAYLIST</small>
-          <strong>${escapeHTML(pl.name)}</strong>
-          <span>${pl.tracks.length} ${pl.tracks.length === 1 ? "TRACK" : "TRACKS"}</span>
-        </div>
-      </button>
-    `;
-  }).join("");
-
-  const buttons = host.querySelectorAll(".playlist-card");
-  buttons.forEach((btn, index) => btn.addEventListener("click", () => {
-    if (host.__b1apiSuppressClick) return;
-    const centered = Math.abs(index - getNearestCarouselIndex(host, buttons)) < 0.5;
-    if (!centered) {
-      centerPlaylistCard(index, host, buttons);
-      return;
-    }
-    openPlaylist(btn.dataset.playlist);
-  }));
-
-  enhancePlaylistCarousel(host, buttons);
-  requestAnimationFrame(() => { centerPlaylistCard(0, host, buttons); updatePlaylistCarousel(host, buttons); });
-}
-
-let carouselDrag = null;
-
-function getNearestCarouselIndex(host, buttons) {
-  if (!buttons.length) return 0;
-  const center = host.scrollLeft + host.clientWidth / 2;
-  let nearest = 0;
-  let min = Infinity;
-  for (let i = 0; i < buttons.length; i++) {
-    const button = buttons[i];
-    const distance = Math.abs((button.offsetLeft + button.offsetWidth / 2) - center);
-    if (distance < min) {
-      min = distance;
-      nearest = i;
-    }
-  }
-  return nearest;
-}
-
-function centerPlaylistCard(index, host, buttons) {
-  const button = buttons[index];
-  if (!button) return;
-  const target = Math.max(0, button.offsetLeft - (host.clientWidth - button.offsetWidth) / 2);
-  host.scrollTo({ left: target, behavior: "smooth" });
-}
-
-function updatePlaylistCarousel(host, buttons) {
-  if (!host || !buttons.length) return;
-  const center = host.scrollLeft + host.clientWidth / 2;
-  for (let i = 0; i < buttons.length; i++) {
-    const button = buttons[i];
-    const distance = (button.offsetLeft + button.offsetWidth / 2) - center;
-    const normalized = Math.max(-2.2, Math.min(2.2, distance / 300));
-    const abs = Math.abs(normalized);
-    const scale = abs < 0.48 ? 1.04 : Math.max(.82, 1 - abs * .07);
-    const rotate = normalized * -7;
-    const y = Math.min(18, abs * abs * 4);
-    const opacity = Math.max(.2, 1 - Math.max(0, abs - 1.1) * .38);
-
-    button.style.transform = `translate3d(0,${y}px,0) rotateY(${rotate}deg) scale(${scale})`;
-    button.style.opacity = String(opacity);
-    button.style.zIndex = String(100 - Math.round(abs * 12));
-    button.classList.toggle("is-center", abs < .48);
-  }
-}
-
-function enhancePlaylistCarousel(host, buttons) {
-  host.__b1apiCleanup?.();
-
-  let raf = 0;
-  let drag = null;
-
-  const schedule = () => {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      updatePlaylistCarousel(host, buttons);
+  host.className = "playlist-carousel immersive-stage";
+  host.innerHTML = '<div class="playlist-stage-track">' + state.playlists.map(function(pl,index){
+    return '<button class="playlist-card" data-playlist="'+pl.id+'" data-index="'+index+'" type="button" aria-label="Open '+escapeAttr(pl.name)+'">'
+NaN
+NaN
+NaN
+NaN
+NaN
+  }).join('') + '</div>'
+    + '<button class="carousel-arrow carousel-prev" id="carouselPrevInner" aria-label="Previous playlist">←</button>'
+    + '<button class="carousel-arrow carousel-next" id="carouselNextInner" aria-label="Next playlist">→</button>';
+  const buttons = $$('.playlist-card',host);
+  let phase=0,target=0,frame=0,active=0,drag=null,suppressClick=false,suppressTimer=0;
+  const wrap=function(value,total){return ((value+total/2)%total+total)%total-total/2;};
+  const modulo=function(value,total){return ((value%total)+total)%total;};
+  const requestRender=function(){if(!frame) frame=requestAnimationFrame(render);};
+  const render=function(){
+    const width=host.clientWidth;
+    const step=width<680?255:width<1000?300:330;
+    const total=buttons.length;
+    phase += (target-phase)*0.14;
+    if(Math.abs(target-phase)<0.0005) phase=target;
+    active=modulo(Math.round(phase),total);
+    buttons.forEach(function(button,index){
+      const slot=wrap(index-phase,total), abs=Math.abs(slot);
+      const x=slot*step+slot*abs*13, y=abs*abs*8;
+      const scale=abs<0.5?1.06:Math.max(0.72,1-abs*0.078);
+      const rotate=slot*-3.2, rotateY=slot*-9;
+      const opacity=Math.max(0.08,1-Math.max(0,abs-2.1)*0.48);
+      button.style.transform='translate3d(calc(-50% + '+x+'px),calc(-50% + '+y+'px),0) rotateZ('+rotate+'deg) rotateY('+rotateY+'deg) scale('+scale+')';
+      button.style.opacity=String(opacity);
+      button.style.zIndex=String(100-Math.round(abs*12));
+      button.classList.toggle('is-center',abs<0.5);
+      button.tabIndex=abs<0.5?0:-1;
     });
+    if(Math.abs(target-phase)>0.0005 && !host.classList.contains('is-open')) frame=requestAnimationFrame(render); else frame=0;
   };
-
-  const onScroll = schedule;
-  const onResize = schedule;
-
-  const onWheel = (event) => {
-    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-    if (!delta) return;
-    event.preventDefault();
-    host.scrollLeft += delta;
-    schedule();
-  };
-
-  const onPointerDown = (event) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-    drag = { x: event.clientX, scroll: host.scrollLeft, moved: false };
-    host.setPointerCapture?.(event.pointerId);
-  };
-
-  const onPointerMove = (event) => {
-    if (!drag) return;
-    const dx = event.clientX - drag.x;
-    if (Math.abs(dx) > 5) drag.moved = true;
-    if (!drag.moved) return;
-    event.preventDefault();
-    host.scrollLeft = drag.scroll - dx;
-    schedule();
-  };
-
-  const onPointerUp = () => {
-    if (!drag) return;
-    if (drag.moved) {
-      centerPlaylistCard(getNearestCarouselIndex(host, buttons), host, buttons);
-      host.__b1apiSuppressClick = true;
-      window.clearTimeout(host.__b1apiSuppressTimer);
-      host.__b1apiSuppressTimer = window.setTimeout(() => {
-        host.__b1apiSuppressClick = false;
-      }, 220);
-    }
-    drag = null;
-  };
-
-  host.addEventListener("scroll", onScroll, { passive: true });
-  host.addEventListener("wheel", onWheel, { passive: false });
-  host.addEventListener("pointerdown", onPointerDown);
-  host.addEventListener("pointermove", onPointerMove);
-  host.addEventListener("pointerup", onPointerUp);
-  host.addEventListener("pointercancel", onPointerUp);
-  window.addEventListener("resize", onResize, { passive: true });
-
-  host.__b1apiCleanup = () => {
-    if (raf) cancelAnimationFrame(raf);
-    host.removeEventListener("scroll", onScroll);
-    host.removeEventListener("wheel", onWheel);
-    host.removeEventListener("pointerdown", onPointerDown);
-    host.removeEventListener("pointermove", onPointerMove);
-    host.removeEventListener("pointerup", onPointerUp);
-    host.removeEventListener("pointercancel", onPointerUp);
-    window.removeEventListener("resize", onResize);
-    window.clearTimeout(host.__b1apiSuppressTimer);
-    host.__b1apiSuppressClick = false;
-  };
+  const nearestVirtualIndex=function(index){const total=buttons.length;const cycle=Math.round((target-index)/total);return index+cycle*total;};
+  const moveBy=function(direction){if(host.classList.contains('is-open'))return;target=Math.round(target)+direction;requestRender();};
+  const closePreview=function(){host.classList.remove('is-open');$('.playlist-open',host)?.remove();requestRender();};
+  const openPreview=function(index){const pl=state.playlists[index];if(!pl)return;host.classList.add('is-open');renderPlaylistPreview(host,pl,closePreview);if(frame)cancelAnimationFrame(frame);frame=0;};
+  buttons.forEach(function(button,index){button.addEventListener('click',function(){
+    if(suppressClick){suppressClick=false;window.clearTimeout(suppressTimer);return;}
+    const slot=wrap(index-phase,buttons.length);
+    if(Math.abs(slot)>=0.5){target=nearestVirtualIndex(index);requestRender();return;}
+    openPreview(index);
+  });});
+  const onWheel=function(event){if(host.classList.contains('is-open'))return;const delta=Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY;if(!delta)return;event.preventDefault();event.stopPropagation();target=Math.round(target)+(delta>0?1:-1);requestRender();};
+  const onPointerDown=function(event){if(host.classList.contains('is-open'))return;if(event.pointerType==='mouse'&&event.button!==0)return;drag={pointerId:event.pointerId,startX:event.clientX,startTarget:target,moved:false};event.preventDefault();};
+  const onPointerMove=function(event){if(!drag||event.pointerId!==drag.pointerId||host.classList.contains('is-open'))return;const dx=event.clientX-drag.startX;if(Math.abs(dx)>8)drag.moved=true;if(drag.moved){event.preventDefault();target=drag.startTarget-dx/245;requestRender();}};
+  const onPointerUp=function(event){if(!drag||event.pointerId!==drag.pointerId)return;if(drag.moved){target=Math.round(target);requestRender();suppressClick=true;window.clearTimeout(suppressTimer);suppressTimer=window.setTimeout(function(){suppressClick=false;},260);}drag=null;};
+  const onKey=function(event){if(host.classList.contains('is-open')){if(event.key==='Escape')closePreview();return;}if(event.key==='ArrowRight'){event.preventDefault();moveBy(1);}if(event.key==='ArrowLeft'){event.preventDefault();moveBy(-1);}};
+  $('#carouselPrevInner',host)?.addEventListener('click',function(){moveBy(-1);});
+  $('#carouselNextInner',host)?.addEventListener('click',function(){moveBy(1);});
+  window.addEventListener('pointermove',onPointerMove,{passive:false});
+  window.addEventListener('pointerup',onPointerUp,{passive:false});
+  window.addEventListener('pointercancel',onPointerUp,{passive:false});
+  window.addEventListener('keydown',onKey);
+  host.addEventListener('wheel',onWheel,{passive:false});
+  host.addEventListener('pointerdown',onPointerDown,{passive:false});
+  host.__b1apiCleanup=function(){if(frame)cancelAnimationFrame(frame);window.clearTimeout(suppressTimer);window.removeEventListener('pointermove',onPointerMove);window.removeEventListener('pointerup',onPointerUp);window.removeEventListener('pointercancel',onPointerUp);window.removeEventListener('keydown',onKey);host.removeEventListener('wheel',onWheel);host.removeEventListener('pointerdown',onPointerDown);};
+  requestRender();
 }
 
+function renderPlaylistPreview(host,pl,closePreview){
+  const panel=document.createElement('div');
+  panel.className='playlist-open';
+  panel.setAttribute('role','dialog');
+  panel.setAttribute('aria-label',pl.name);
+  const tracks=pl.tracks.slice(0,6);
+  panel.innerHTML='<div class="playlist-open-media">'+playlistArtwork(pl)+'</div>'
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+NaN
+  host.appendChild(panel);
+  panel.addEventListener('click',function(event){event.stopPropagation();
+    if(event.target.closest('.playlist-open-close')){closePreview();return;}
+    const trackButton=event.target.closest('[data-preview-track]');
+    if(trackButton){const track=pl.tracks.find(function(x){return x.id===trackButton.dataset.previewTrack;});if(track){setQueue(pl.tracks,pl.tracks.findIndex(function(x){return x.id===track.id;}));playTrack(track);}return;}
+    if(event.target.closest('[data-preview-play]')){if(!pl.tracks.length)return toast('This playlist is empty.');setQueue(pl.tracks,0);playTrack(pl.tracks[0]);return;}
+    if(event.target.closest('[data-preview-library]')){openPlaylist(pl.id);return;}
+  });
+}
 function playlistArtwork(pl) {
   const first = pl.tracks[0];
   if (first?.thumbnail) return `<img src="${safeUrl(first.thumbnail)}" alt="">`;
@@ -816,6 +757,7 @@ function updatePlayerUI() {
     fullBg.style.backgroundImage = track?.thumbnail ? `url("${safeUrl(track.thumbnail)}")` : "none";
   }
   $("#fullPlayerTitle") && ($("#fullPlayerTitle").textContent = track?.title || "Nothing playing");
+  $("#miniVideoTitle") && ($("#miniVideoTitle").textContent = track?.title || "b1api / YouTube");
   $("#fullPlayerArtist") && ($("#fullPlayerArtist").textContent = track?.artist || "Choose a track to begin");
   $("#fullPlayerLike") && ($("#fullPlayerLike").classList.toggle("active", liked), $("#fullPlayerLike").textContent = liked ? "♥" : "♡");
   syncPlayerModes();
@@ -1140,19 +1082,7 @@ function enhanceNavigation() {
   $("#apiStatus")?.addEventListener("click", openApiDialog);
   $("#queueBtnTop")?.addEventListener("click", () => { renderQueue(); $("#queueDialog").showModal(); });
 
-  $("#carouselPrev")?.addEventListener("click", () => {
-    const host = $("#playlistCarousel");
-    const cards = $$(".playlist-card", host);
-    if (!cards.length) return;
-    centerPlaylistCard(Math.max(0, getNearestCarouselIndex(host, cards) - 1), host, cards);
-  });
-  $("#carouselNext")?.addEventListener("click", () => {
-    const host = $("#playlistCarousel");
-    const cards = $$(".playlist-card", host);
-    if (!cards.length) return;
-    centerPlaylistCard(Math.min(cards.length - 1, getNearestCarouselIndex(host, cards) + 1), host, cards);
-  });
-
+  // Playlist stage owns its own controls.
   $("#closeFirstRun")?.addEventListener("click", () => closeFirstRun(true));
   $("#mobileScrim")?.addEventListener("click", () => { $(".sidebar")?.classList.remove("open"); $("#mobileScrim")?.classList.remove("active"); });
   updateRoute("home");
