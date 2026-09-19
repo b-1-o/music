@@ -525,3 +525,47 @@ input[type="range"][disabled]{opacity:.7;cursor:not-allowed}
     background:linear-gradient(90deg,rgba(5,5,7,.68),transparent 12%,transparent 88%,rgba(5,5,7,.68))!important;
   }
 }
+
+
+/* === FULL-WIDTH CAROUSEL STAGE === */
+.home-minimal{
+  width:100%;
+  padding-left:0!important;
+  padding-right:0!important;
+}
+.home-minimal-head{
+  width:100%!important;
+  max-width:none!important;
+  padding-left:4vw!important;
+  padding-right:4vw!important;
+}
+.home-minimal .carousel-frame{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.home-minimal .playlist-carousel{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+}
+.home-minimal .playlist-carousel::before,
+.home-minimal .playlist-carousel::after{
+  border-radius:0!important;
+}
+@media(max-width:850px){
+  .home-minimal{padding-left:0!important;padding-right:0!important}
+  .home-minimal-head{padding-left:24px!important;padding-right:24px!important}
+}
+@media(max-width:620px){
+  .home-minimal-head{padding-left:14px!important;padding-right:14px!important}
+}
