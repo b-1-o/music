@@ -760,7 +760,7 @@ function renderPlaylists() {
       if (suppressClick) {
         suppressClick = false;
         window.clearTimeout(suppressTimer);
-    window.clearTimeout(mobileSwitchTimer);
+        window.clearTimeout(mobileSwitchTimer);
         return;
       }
 
@@ -797,6 +797,9 @@ function renderPlaylists() {
     if (drag.moved) {
       event.preventDefault();
       drag.offset = dx;
+      if (window.innerWidth > 620) {
+        target = drag.startTarget - dx / 245;
+      }
       requestRender();
     }
   };
