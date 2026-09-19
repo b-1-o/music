@@ -1,6 +1,7 @@
-/* mobile-nav.js — single-tap open/close (no double-toggle) */
+/* mobile-nav.js — drawer + bottom tabs (Home / Search / Library / Menu) */
 (function () {
   function qs(s, r) { return (r || document).querySelector(s); }
+  function qsa(s, r) { return [].slice.call((r || document).querySelectorAll(s)); }
 
   var lastToggleAt = 0;
 
@@ -42,22 +43,73 @@
     else openSidebar();
   }
 
-  function bind() {
-    var btn = qs("#mobileMenuBtn");
-    var overlay = qs("#overlay") || qs(".overlay");
-    if (!btn || btn.dataset.mobileNavBound === "1") return;
+  function syncTabs(view) {
+    qsa(".mobile-tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.view === view);
+    });
+  }
 
-    var clone = btn.cloneNode(true);
-    btn.parentNode.replaceChild(clone, btn);
-    btn = clone;
-    btn.dataset.mobileNavBound = "1";
-    btn.type = "button";
+  function goView(view) {
+    closeSidebar();
+    var nav = qs('.sidebar .nav-item[data-view="' + view + '"]');
+    if (nav) {
+      nav.click();
+      syncTabs(view);
+      return;
+    }
+    qsa(".view").forEach(function (v) { v.classList.remove("active"); });
+    var map = { home: "homeView", search: "searchView", library: "libraryView", playlist: "playlistView" };
+    var el = document.getElementById(map[view] || "homeView");
+    if (el) el.classList.add("active");
+    qsa(".nav-item[data-view]").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.view === view);
+    });
+    syncTabs(view);
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
 
-    btn.addEventListener("click", function (e) {
+  function ensureBottomTabs() {
+    if (qs("#mobileTabBar")) return;
+    var bar = document.createElement("nav");
+    bar.id = "mobileTabBar";
+    bar.className = "mobile-tab-bar";
+    bar.innerHTML =
+      '<button type="button" class="mobile-tab active" data-view="home"><span>⌂</span><b>Home</b></button>' +
+      '<button type="button" class="mobile-tab" data-view="search"><span>⌕</span><b>Search</b></button>' +
+      '<button type="button" class="mobile-tab" data-view="library"><span>▣</span><b>Library</b></button>' +
+      '<button type="button" class="mobile-tab" data-view="menu"><span>☰</span><b>Menu</b></button>';
+    document.body.appendChild(bar);
+
+    bar.addEventListener("click", function (e) {
+      var tab = e.target.closest(".mobile-tab");
+      if (!tab) return;
       e.preventDefault();
       e.stopPropagation();
-      toggleSidebar();
+      if (tab.dataset.view === "menu") {
+        toggleSidebar();
+        return;
+      }
+      goView(tab.dataset.view);
     }, true);
+  }
+
+  function bindDrawer() {
+    var btn = qs("#mobileMenuBtn");
+    var overlay = qs("#overlay") || qs(".overlay");
+    var sidebar = qs(".sidebar");
+
+    if (btn && btn.dataset.mobileNavBound !== "1") {
+      var clone = btn.cloneNode(true);
+      btn.parentNode.replaceChild(clone, btn);
+      btn = clone;
+      btn.dataset.mobileNavBound = "1";
+      btn.type = "button";
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSidebar();
+      }, true);
+    }
 
     if (overlay && overlay.dataset.mobileNavBound !== "1") {
       overlay.dataset.mobileNavBound = "1";
@@ -68,19 +120,30 @@
       }, true);
     }
 
-    document.querySelectorAll(".sidebar .nav-item[data-view]").forEach(function (el) {
-      if (el.dataset.mobileNavBound === "1") return;
-      el.dataset.mobileNavBound = "1";
-      el.addEventListener("click", function () {
-        setTimeout(closeSidebar, 30);
-      }, true);
-    });
+    if (sidebar && sidebar.dataset.mobileNavDelegated !== "1") {
+      sidebar.dataset.mobileNavDelegated = "1";
+      sidebar.addEventListener("click", function (e) {
+        var nav = e.target.closest(".nav-item[data-view]");
+        var pl = e.target.closest(".sidebar-playlist");
+        var settings = e.target.closest("#settingsBtn");
+        if (nav) {
+          var view = nav.dataset.view;
+          setTimeout(function () {
+            closeSidebar();
+            syncTabs(view);
+          }, 20);
+        } else if (pl || settings) {
+          setTimeout(closeSidebar, 20);
+        }
+      }, false);
+    }
   }
 
   function boot() {
-    bind();
-    setTimeout(bind, 50);
-    setTimeout(bind, 300);
+    ensureBottomTabs();
+    bindDrawer();
+    setTimeout(bindDrawer, 150);
+    setTimeout(bindDrawer, 600);
   }
 
   if (document.readyState === "loading") {
@@ -88,5 +151,5 @@
   } else {
     boot();
   }
-  window.addEventListener("load", function () { setTimeout(bind, 50); });
+  window.addEventListener("load", function () { setTimeout(boot, 80); });
 })();

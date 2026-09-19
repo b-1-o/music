@@ -90,7 +90,6 @@
     z-index: 2 !important;
   }
 
-  /* Scrim only on the RIGHT — does not cover Search/Library/playlists */
   .overlay,
   #overlay {
     display: none;
@@ -141,4 +140,63 @@
 #backgroundBtn,
 #apiBtn {
   display: none !important;
+}
+
+/* Bottom tab bar — open Search / Library without the drawer */
+@media (max-width: 850px) {
+  .mobile-tab-bar {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 10070 !important;
+    height: 56px !important;
+    padding: 4px !important;
+    gap: 2px !important;
+    border: 1px solid rgba(255,255,255,.14) !important;
+    border-radius: 16px !important;
+    background: rgba(10, 11, 16, 0.94) !important;
+    backdrop-filter: blur(16px) saturate(120%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,.45) !important;
+    pointer-events: auto !important;
+  }
+
+  .mobile-tab {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    color: rgba(255,255,255,.45) !important;
+    font: 600 9px system-ui, sans-serif !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
+  }
+
+  .mobile-tab span { font-size: 16px !important; line-height: 1 !important; }
+  .mobile-tab.active {
+    color: #fff !important;
+    background: rgba(255,255,255,.08) !important;
+  }
+
+  .player {
+    bottom: 74px !important;
+  }
+
+  body.sidebar-open .mobile-tab-bar {
+    opacity: 0.3;
+    pointer-events: none !important;
+  }
+}
+
+@media (min-width: 851px) {
+  .mobile-tab-bar { display: none !important; }
 }
