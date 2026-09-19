@@ -74,3 +74,9 @@
     transform: none !important;
   }
 }
+
+/* Hide non-essential topbar actions */
+#backgroundBtn,
+#apiBtn {
+  display: none !important;
+}
