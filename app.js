@@ -977,7 +977,7 @@ function playlistArtwork(pl) {
   if (custom) return `<img src="${safeUrl(custom)}" alt="">`;
   const first = pl.tracks[0];
   if (first?.thumbnail) return `<img src="${safeUrl(first.thumbnail)}" alt="">`;
-  return `<div class="playlist-fallback-art"><span>${escapeHTML((pl.name[0] || "F").toUpperCase())}</span></div>`;
+  return `<div class="playlist-fallback-art" aria-hidden="true"><i></i></div>`;
 }
 
 function smallPlaylistArt(pl) {
@@ -985,7 +985,7 @@ function smallPlaylistArt(pl) {
   if (custom) return `<img src="${safeUrl(custom)}" alt="">`;
   const first = pl.tracks[0];
   if (first?.thumbnail) return `<img src="${safeUrl(first.thumbnail)}" alt="">`;
-  return `<span class="fallback-art">${escapeHTML((pl.name[0] || "F").toUpperCase())}</span>`;
+  return `<span class="fallback-art" aria-hidden="true"><i></i></span>`;
 }
 
 async function createPlaylist() {
