@@ -1,35 +1,39 @@
 # b1api
 
-> A cinematic local-first music web application powered by YouTube Data API v3 and the official YouTube player.
+![Preview](./assets/preview.jpeg)
 
-b1api combines a full-screen visual experience with playlists, playback controls, search, and browser-local music preferences.
+A cinematic local-first music web application powered by YouTube Data API v3 and the official YouTube IFrame Player. Combines a full-screen visual experience with playlists, playback controls, search, and browser-local music preferences.
+
+## Live Demo
+🔗 [b-1-o.github.io/music](https://b-1-o.github.io/music/)
+
+## Preview
+![Preview](./assets/preview.jpeg)
+
+![Demo](./assets/demo.gif)
+*(GIF will be added)*
 
 ## Features
-
 - YouTube Data API v3 search
 - Official YouTube IFrame Player
 - Local playlists, likes, and recently played history
 - Queue, shuffle, and repeat
-- Custom background and glass / blur settings
+- Custom background and glass/blur settings
 - Local nickname-based experience
 - Touch and mouse navigation
-- GitHub Pages deployment
+- GitHub Pages deployment via GitHub Actions
 
 ## Tech Stack
-
 JavaScript · HTML · CSS · YouTube Data API v3 · YouTube IFrame Player · GitHub Actions · GitHub Pages
 
-## API Configuration
+## How it works
+- Search queries are sent to YouTube Data API v3; results are rendered as playable cards.
+- Playback uses the official YouTube IFrame Player API for reliability and compliance.
+- All user data (playlists, likes, history, appearance, nickname) is stored in localStorage — nothing is sent to a server.
+- The app is a static site deployed to GitHub Pages; the API key is injected at build time via GitHub Actions secrets.
 
-Configure the `YOUTUBE_API_KEY` GitHub Actions secret for deployment. Restrict the generated browser key in Google Cloud to the site's HTTP referrer and only the YouTube Data API v3.
-
-## Data & Privacy
-
-Playlists, likes, recent history, appearance settings, and the local nickname are stored in the browser.
-
-## Deployment
-
-Pushes to `main` are deployed through GitHub Actions to GitHub Pages.
-
-**Live:** https://b-1-o.github.io/music/  
-**Repository:** https://github.com/b-1-o/music
+## Getting Started
+```bash
+git clone https://github.com/b-1-o/music.git
+cd music
+```
