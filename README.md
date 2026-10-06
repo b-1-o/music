@@ -1,17 +1,13 @@
 # b1api
 
-![Preview](./assets/preview.jpeg)
 
 A cinematic local-first music web application powered by YouTube Data API v3 and the official YouTube IFrame Player. Combines a full-screen visual experience with playlists, playback controls, search, and browser-local music preferences.
 
 ## Live Demo
-🔗 [b-1-o.github.io/music](https://b-1-o.github.io/music/)
+ [b-1-o.github.io/music](https://b-1-o.github.io/music/)
 
-## Preview
 ![Preview](./assets/preview.jpeg)
 
-![Demo](./assets/demo.gif)
-*(GIF will be added)*
 
 ## Features
 - YouTube Data API v3 search
